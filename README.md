@@ -15,6 +15,11 @@ when it pays to wait (or hurry) to fill up.
   or that it makes **no difference**, with a one-line reason and the expected change in cent/L,
   plus a backtest against filling up on a random day. The daily job writes the same to
   `data/advice.json` for the dashboard. See [docs/refuel-advice.md](docs/refuel-advice.md).
+- The dashboard in `site/` (published with GitHub Pages by the "Publish dashboard" workflow)
+  shows the price history, the already published price for tomorrow and the refuel advice.
+  `python -m fuelprices.export` writes the data it reads to `site/data/prices.json`; the
+  advice comes from `data/advice.json` when it exists. Preview locally with
+  `python -m fuelprices.export && python -m http.server -d site`.
 - `fuelprices.rules` models when the government rules allow a price to go up or down.
   See [docs/price-rules.md](docs/price-rules.md) for sources and open questions.
 - `python -m heating` compares heating the house with gas or with the heat pumps (airco units)

@@ -1,0 +1,58 @@
+name: Publish dashboard
+
+# Builds the static dashboard in site/ with the latest price history exported to JSON and
+# publishes it on GitHub Pages. Runs after each daily price update (its commit, pushed with
+# the workflow token, does not trigger a push event) and when the page or data change on main.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "site/**"
+      - "data/**"
+      - "src/fuelprices/export.py"
+      - ".github/workflows/pages.yml"
+  workflow_run:
+    workflows: ["Daily price update"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main # the daily run's commit, not the commit that triggered it
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Export the price history
+        run: python -m fuelprices.export --db data/prices.sqlite --out site/data/prices.json
+      - name: Add the refuel advice when there is one
+        run: if [ -f data/advice.json ]; then cp data/advice.json site/data/advice.json; fi
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
