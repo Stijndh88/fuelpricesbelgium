@@ -1,0 +1,25 @@
+# Inputs for `python -m heating`. Replace the defaults with your own house and equipment.
+
+[location]
+# Where to take the outdoor temperature (default: Brussels).
+latitude = 50.85
+longitude = 4.35
+
+[boiler]
+# Share of the gas energy that ends up as heat: ~0.9 condensing boiler, ~0.8 older boiler.
+efficiency = 0.9
+
+[house]
+# Gas used in a year, from the yearly bill (kWh). Sets how much heat the house needs.
+annual_gas_kwh = 17000
+# Part of that gas used for hot water and cooking rather than heating the rooms.
+hot_water_share = 0.15
+# Mean outdoor temperature below which the house needs heating, and the number of
+# degree-days on that base in a normal Belgian year (approximate, Uccle).
+base_temp = 16.5
+degree_days = 2400
+
+[heat_pump]
+# COP of your airco units by outdoor temperature, as [temperature, COP] pairs.
+# Generic air-to-air values; take the real ones from your unit's datasheet (EN 14511).
+cop_curve = [[-15, 1.8], [-7, 2.4], [2, 3.1], [7, 3.9], [12, 4.6], [20, 5.2]]
