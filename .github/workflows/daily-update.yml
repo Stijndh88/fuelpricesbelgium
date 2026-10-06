@@ -1,0 +1,47 @@
+name: Daily price update
+
+# Fetches the official maximum prices and the Brent crude price, merges them into
+# data/prices.sqlite and commits the file when anything changed. Safe to run more than once
+# a day: a run without new prices leaves the file untouched.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 5 * * *" # each morning (07:30 Belgian summer time): today's prices
+    - cron: "30 15 * * 1-5" # weekdays, after FOD Economie publishes the next day's prices
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-price-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Download the FOD Economie price page
+        run: curl -sSfL -A "fuelpricesbelgium" -o page.html "$(python -c 'from fuelprices.sources import fod; print(fod.URL)')"
+      - name: Update the price history
+        run: python -m fuelprices.update --db data/prices.sqlite --html page.html
+      - name: Commit the price history
+        run: |
+          if git diff --quiet -- data/prices.sqlite; then
+            echo "No new prices."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/prices.sqlite
+          git commit -m "Update price history ($(date -u +%F))"
+          git push
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: fod-page
+          path: page.html
