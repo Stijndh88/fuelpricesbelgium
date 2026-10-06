@@ -1,0 +1,27 @@
+name: Fetch official prices
+
+# Runs the live fetch on GitHub's network and keeps the result as a build artifact.
+# Nothing is committed yet; storing the history in the repo is a later step.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 15 * * 1-5" # weekdays, after FOD Economie publishes the next day's prices
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - run: curl -sSfL -A "fuelpricesbelgium" -o page.html "$(python -c 'from fuelprices.sources import fod; print(fod.URL)')"
+      - run: fuelprices fetch --html page.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: prices
+          path: |
+            data/max_prices.csv
+            page.html
