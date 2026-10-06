@@ -45,10 +45,37 @@ Why the tariff is entered by hand: variable contracts change once a month, and t
 price (energy plus network costs, levies and VAT) differs per supplier and region, so your own
 tariff card is the only exact source.
 
+## Keeping your own values private
+
+The repository is public, so your address, tariffs and gas use do not go in it. The files in
+the repo only hold generic defaults and the airco datasheets. Your own values are read from
+environment variables, which in GitHub Actions are **repository secrets**
+(Settings > Secrets and variables > Actions > Secrets; secrets, unlike variables, are masked
+in logs). Any that is unset or empty falls back to the default.
+
+| secret | what | default |
+|---|---|---|
+| `HEATING_LATITUDE`, `HEATING_LONGITUDE` | where you live, for the weather | Brussels |
+| `HEATING_GAS_EUR_PER_KWH` | all-in gas price | `data/heating_tariffs.csv` |
+| `HEATING_ELECTRICITY_EUR_PER_KWH` | all-in electricity price | `data/heating_tariffs.csv` |
+| `HEATING_ANNUAL_GAS_KWH` | yearly gas use from the bill | 17000 |
+| `HEATING_BOILER_EFFICIENCY` | e.g. 0.9 (0,9 also works) | 0.9 |
+| `HEATING_HOT_WATER_SHARE` | optional, share of gas used for hot water | 0.15 |
+
+When any of them is set, the report on the Action's summary page (visible to everyone) shows
+only the verdict: the switch temperature and which option is cheaper each day. It leaves out
+prices, gas use, boiler, location, kWh and euro amounts, and the break-even COP, which would
+reveal the price ratio. To see the full report, run it on your own machine with the values in
+your shell and `--show-private`:
+
+```sh
+HEATING_GAS_EUR_PER_KWH=0.11 HEATING_ELECTRICITY_EUR_PER_KWH=0.30 python -m heating --show-private
+```
+
 ## What you need to fill in
 
-- Your supplier's all-in variable price for gas and electricity each month
-  (`data/heating_tariffs.csv`). If you have a fixed-price contract, one row is enough.
+- Your supplier's all-in variable price for gas and electricity each month, as secrets (above);
+  update them when your tariff card changes.
 - Your annual gas use in kWh from the yearly bill, and the boiler type (condensing or not).
 - Your location, for the weather. The airco units are already in `config/heating.toml`
   (Samsung AJ040 and AJ068, from the datasheets). Measured COP values at a few outdoor

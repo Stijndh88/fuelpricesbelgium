@@ -2,6 +2,12 @@ name: Heating advice
 
 # Each morning in the heating season, compares heating with gas and with the heat pump for
 # the coming week and writes the result to the run's summary page. Commits nothing.
+#
+# The repository is public, so personal values are repository secrets (Settings > Secrets and
+# variables > Actions > Secrets), never files in the repo. When any of them is set, the report
+# on the summary page leaves out prices, gas use, boiler, location and euro amounts and shows
+# only the verdict. Secrets that are not set fall back to the generic defaults in
+# config/heating.toml and data/heating_tariffs.csv.
 on:
   workflow_dispatch:
   schedule:
@@ -16,4 +22,13 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e .
-      - run: python -m heating | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Compare gas and heat pump
+        env:
+          HEATING_LATITUDE: ${{ secrets.HEATING_LATITUDE }}
+          HEATING_LONGITUDE: ${{ secrets.HEATING_LONGITUDE }}
+          HEATING_GAS_EUR_PER_KWH: ${{ secrets.HEATING_GAS_EUR_PER_KWH }}
+          HEATING_ELECTRICITY_EUR_PER_KWH: ${{ secrets.HEATING_ELECTRICITY_EUR_PER_KWH }}
+          HEATING_ANNUAL_GAS_KWH: ${{ secrets.HEATING_ANNUAL_GAS_KWH }}
+          HEATING_BOILER_EFFICIENCY: ${{ secrets.HEATING_BOILER_EFFICIENCY }}
+          HEATING_HOT_WATER_SHARE: ${{ secrets.HEATING_HOT_WATER_SHARE }}
+        run: python -m heating | tee -a "$GITHUB_STEP_SUMMARY"
