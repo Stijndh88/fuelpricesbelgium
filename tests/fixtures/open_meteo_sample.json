@@ -1,3 +1,0 @@
-{"latitude": 50.86, "longitude": 4.36, "daily_units": {"time": "iso8601", "temperature_2m_mean": "°C"},
- "daily": {"time": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"],
-           "temperature_2m_mean": [12.4, 9.8, 4.0, -2.5, null]}}

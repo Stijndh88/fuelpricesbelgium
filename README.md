@@ -22,9 +22,6 @@ when it pays to wait (or hurry) to fill up.
   `python -m fuelprices.export && python -m http.server -d site`.
 - `fuelprices.rules` models when the government rules allow a price to go up or down.
   See [docs/price-rules.md](docs/price-rules.md) for sources and open questions.
-- `python -m heating` compares heating the house with gas or with the heat pumps (airco units)
-  and tells from which outdoor temperature on the heat pump is cheaper. Separate from the fuel
-  price code; see [docs/heating.md](docs/heating.md).
 
 ## Getting started
 
