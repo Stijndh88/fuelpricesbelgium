@@ -5,22 +5,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          curl -sS -L -m 30 -A "fuelpricesbelgium" -o /tmp/pf.html "https://petrolfed.be/nl/maximumprijzen"
-          python3 - <<'PY'
-          import re,html
-          raw=open('/tmp/pf.html',encoding='utf-8',errors='ignore').read()
-          print("len",len(raw))
-          print("-- script srcs"); print('\n'.join(sorted(set(re.findall(r'<script[^>]+src="([^"]+)"',raw)))[:30]))
-          print("-- drupalSettings / data attrs")
-          for m in re.finditer(r'(drupalSettings|data-chart|data-series|data-url|data-src|data-json|csv|xlsx|\.json)',raw):
-              s=max(0,m.start()-80); print(raw[s:m.end()+200].replace('\n',' ')); print('..')
-              if m.start()>len(raw): break
+          for p in databank evolutie; do
+            curl -sS -L -m 30 -A "fuelpricesbelgium" -o /tmp/$p.html -w "$p HTTP %{http_code} %{size_download}B\n" "https://petrolfed.be/nl/maximumprijzen/$p"
+            python3 - $p <<'PY'
+          import re,sys,html
+          raw=open(f'/tmp/{sys.argv[1]}.html',encoding='utf-8',errors='ignore').read()
+          i=raw.find('<main')
+          body=raw[i:] if i>=0 else raw
+          print("forms/inputs/selects/buttons/links in main:")
+          for m in re.finditer(r'<(form|input|select|option|button|a)\b[^>]*>',body):
+              tag=m.group(0)
+              if re.search(r'href="/(nl|fr|en)/(?!maximumprijzen)',tag) and '<a' in tag[:3]: continue
+              print(' ',tag[:300])
+          print("main text:")
+          t=re.sub(r'<script.*?</script>|<style.*?</style>','',body,flags=re.S)
+          t=html.unescape(re.sub(r'<[^>]+>','\n',t))
+          print('\n'.join([l.strip() for l in t.splitlines() if l.strip()][:70]))
           PY
-          echo "-- Databank/Evolutie html"
-          python3 - <<'PY'
-          import re
-          raw=open('/tmp/pf.html',encoding='utf-8',errors='ignore').read()
-          for key in ['Databank','Evolutie']:
-              for m in list(re.finditer(key,raw))[:4]:
-                  print(key,'@',m.start(),raw[max(0,m.start()-300):m.start()+700].replace('\n',' ')); print('=====')
-          PY
+          done
