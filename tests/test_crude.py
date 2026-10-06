@@ -1,23 +1,33 @@
+import json
 from datetime import date
 
 from fuelprices import crude
 
-FRED_SAMPLE = """observation_date,DCOILBRENTEU
-2026-09-28,96.81
-2026-09-29,.
-2026-09-30,99.95
-2026-10-01,103.12
-"""
+# Trimmed from a live https://query1.finance.yahoo.com/v8/finance/chart/BZ=F response.
+YAHOO_SAMPLE = json.dumps(
+    {
+        "chart": {
+            "result": [
+                {
+                    "meta": {"currency": "USD", "symbol": "BZ=F"},
+                    "timestamp": [1790726400, 1790812800, 1790899200, 1791158400],
+                    "indicators": {"quote": [{"close": [96.81, None, 103.1234, 99.05]}]},
+                }
+            ],
+            "error": None,
+        }
+    }
+)
 
 
-def test_parse_fred_csv_skips_missing_values():
-    assert crude.parse_fred_csv(FRED_SAMPLE) == {
-        date(2026, 9, 28): 96.81,
-        date(2026, 9, 30): 99.95,
-        date(2026, 10, 1): 103.12,
+def test_parse_yahoo_chart_skips_missing_closes():
+    assert crude.parse_yahoo_chart(YAHOO_SAMPLE) == {
+        date(2026, 9, 30): 96.81,
+        date(2026, 10, 2): 103.12,
+        date(2026, 10, 5): 99.05,
     }
 
 
-def test_parse_fred_csv_accepts_old_header_and_blank_lines():
-    text = "DATE,DCOILBRENTEU\n2026-10-01,101.5\n\n"
-    assert crude.parse_fred_csv(text) == {date(2026, 10, 1): 101.5}
+def test_parse_yahoo_chart_without_bars():
+    empty = {"chart": {"result": [{"meta": {}, "indicators": {"quote": [{"close": []}]}}]}}
+    assert crude.parse_yahoo_chart(json.dumps(empty)) == {}

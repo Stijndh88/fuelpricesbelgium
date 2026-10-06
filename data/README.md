@@ -10,7 +10,7 @@ morning by the "Daily price update" GitHub Action (`python -m fuelprices.update`
 | `e10_max` | official maximum price, petrol E10 (95) | EUR/L incl. VAT | FOD Economie |
 | `diesel_product` | wholesale product cost, diesel | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `e10_product` | wholesale product cost, petrol | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
-| `brent_usd` | Brent crude spot | USD per barrel | FRED `DCOILBRENTEU` (EIA), lags a few working days |
+| `brent_usd` | Brent crude, front-month ICE future daily close | USD per barrel | Yahoo Finance `BZ=F` (unofficial endpoint) |
 | `updated_at` | last time a value in the row changed | UTC timestamp | |
 
 Max prices stay in force until a new one is published, so days without a publication
