@@ -1,7 +1,7 @@
 name: Daily price update
 
 # Fetches the official maximum prices and the Brent crude price, merges them into
-# data/prices.sqlite and commits the file when anything changed. Safe to run more than once
+# data/prices.sqlite, writes the refuel advice to data/advice.json and commits the file when anything changed. Safe to run more than once
 # a day: a run without new prices leaves the file untouched.
 on:
   workflow_dispatch:
@@ -29,15 +29,17 @@ jobs:
         run: curl -sSfL -A "fuelpricesbelgium" -o page.html "$(python -c 'from fuelprices.sources import fod; print(fod.URL)')"
       - name: Update the price history
         run: python -m fuelprices.update --db data/prices.sqlite --html page.html
+      - name: Write the refuel advice
+        run: fuelprices advise --db data/prices.sqlite --json data/advice.json
       - name: Commit the price history
         run: |
-          if git diff --quiet -- data/prices.sqlite; then
+          if git diff --quiet -- data/prices.sqlite && [ -z "$(git status --porcelain -- data/advice.json)" ]; then
             echo "No new prices."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/prices.sqlite
+          git add data/prices.sqlite data/advice.json
           git commit -m "Update price history ($(date -u +%F))"
           git push
       - uses: actions/upload-artifact@v4
