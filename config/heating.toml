@@ -19,7 +19,22 @@ hot_water_share = 0.15
 base_temp = 16.5
 degree_days = 2400
 
-[heat_pump]
-# COP of your airco units by outdoor temperature, as [temperature, COP] pairs.
-# Generic air-to-air values; take the real ones from your unit's datasheet (EN 14511).
-cop_curve = [[-15, 1.8], [-7, 2.4], [2, 3.1], [7, 3.9], [12, 4.6], [20, 5.2]]
+# Outdoor units of the airco system, from their datasheets: rated heating power (kW) at +7 °C
+# and at -10 °C, and SCOP. Without a cop_curve below, a generic COP curve is scaled so its
+# seasonal average matches the combined SCOP.
+[[heat_pump.units]]
+name = "Samsung AJ040 (2x AR07)"
+heating_kw = 4.2
+heating_kw_at_minus10 = 2.70
+scop = 4.6
+
+[[heat_pump.units]]
+name = "Samsung AJ068 (AR07, AR09, AR12)"
+heating_kw = 8.0
+heating_kw_at_minus10 = 5.14
+scop = 4.32
+
+# Optional: measured COP by outdoor temperature, as [temperature, COP] pairs. Overrides the
+# SCOP-based estimate.
+# [heat_pump]
+# cop_curve = [[-15, 1.8], [-7, 2.4], [2, 3.1], [7, 3.9], [12, 4.6], [20, 5.2]]

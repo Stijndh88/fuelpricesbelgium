@@ -73,7 +73,7 @@ def test_weather_parse_skips_missing_days():
 
 def test_repo_config_and_tariffs_load():
     settings = config.load()
-    assert settings.cop_curve.cop(7) == pytest.approx(3.9)
+    assert settings.cop_curve.cop(7) > 3.9
     assert tariffs.load()
 
 
@@ -95,3 +95,36 @@ def test_cli_report_offline(capsys):
     assert "scenario from the command line" in out
     assert "| Tue 06/10 | 9.8 |" in out
     assert "Mon 05/10" not in out  # past days are left out
+
+
+def test_scaled_curve_matches_the_scop():
+    curve = model.scaled_to_scop(model.CopCurve(), 4.4)
+    assert model.seasonal_cop(curve) == pytest.approx(4.4)
+    assert curve.cop(-7) < curve.cop(7)
+
+
+def test_heat_pump_system_capacity_and_scop():
+    system = model.HeatPumpSystem(
+        (
+            model.HeatPumpUnit("a", heating_kw=4.2, heating_kw_at_minus10=2.7, scop=4.6),
+            model.HeatPumpUnit("b", heating_kw=8.0, heating_kw_at_minus10=5.14, scop=4.32),
+        )
+    )
+    assert system.capacity_kw(10) == pytest.approx(12.2)
+    assert system.capacity_kw(-15) == pytest.approx(7.84)
+    assert system.capacity_kw(-1.5) == pytest.approx((12.2 + 7.84) / 2)
+    assert system.scop == pytest.approx(12.2 / (4.2 / 4.6 + 8.0 / 4.32))
+
+
+def test_gas_tops_up_when_heat_pumps_fall_short():
+    curve = model.CopCurve(((-7.0, 2.0), (7.0, 4.0)))
+    # 100 kWh needed at 0 deg C, heat pumps deliver at most 2 kW x 24 h = 48 kWh at COP 3.
+    cost = model.day_cost(0.0, PRICES, curve, 0.9, 100 / 16.5, 16.5, capacity_kw=2.0)
+    assert cost.heat_pump_share == pytest.approx(0.48)
+    assert cost.heat_pump_eur == pytest.approx(48 * 0.30 / 3 + 52 * 0.10 / 0.9)
+
+
+def test_repo_config_has_the_samsung_units():
+    settings = config.load()
+    assert [u.name.split()[1] for u in settings.heat_pumps.units] == ["AJ040", "AJ068"]
+    assert model.seasonal_cop(settings.cop_curve) == pytest.approx(settings.heat_pumps.scop)

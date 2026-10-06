@@ -35,8 +35,15 @@ def report(
         f"gas {prices.gas:.4f} EUR/kWh, electricity {prices.electricity:.4f} EUR/kWh.",
         "",
         f"- Heat from gas costs {gas_heat:.3f} EUR/kWh (boiler efficiency {eta:.0%}).",
-        f"- The heat pump is cheaper whenever its COP is above **{cop_needed:.2f}**.",
     ]
+    if settings.capacity_known:
+        system = settings.heat_pumps
+        lines.append(
+            f"- Heat pumps ({', '.join(u.name for u in system.units)}): "
+            f"{system.capacity_kw(7):.1f} kW at +7 °C, {system.capacity_kw(-10):.1f} kW at "
+            f"-10 °C, combined SCOP {system.scop:.2f}. When the house needs more, gas tops up."
+        )
+    lines.append(f"- The heat pump is cheaper whenever its COP is above **{cop_needed:.2f}**.")
     if switch is not None:
         lines.append(
             f"- With your COP curve that is when the daily mean outdoor temperature is above "
@@ -51,8 +58,9 @@ def report(
     if days:
         lines += [
             "",
-            "| day | mean temp °C | COP | heat kWh | gas EUR | heat pump EUR | cheaper |",
-            "|---|---:|---:|---:|---:|---:|---|",
+            "| day | mean temp °C | COP | heat kWh | gas EUR | heat pump EUR | cheaper |"
+            + (" heat pumps cover |" if settings.capacity_known else ""),
+            "|---|---:|---:|---:|---:|---:|---|" + ("---:|" if settings.capacity_known else ""),
         ]
         total_gas = total_hp = total_best = 0.0
         for day in days:
@@ -63,6 +71,7 @@ def report(
                 eta,
                 settings.loss_kwh_per_degree_day,
                 settings.base_temp,
+                settings.heat_pumps.capacity_kw(temps[day]) if settings.capacity_known else None,
             )
             total_gas += cost.gas_eur
             total_hp += cost.heat_pump_eur
@@ -71,10 +80,11 @@ def report(
             lines.append(
                 f"| {day:%a %d/%m} | {cost.outdoor_temp:.1f} | {cost.cop:.1f} | "
                 f"{cost.heat_kwh:.0f} | {cost.gas_eur:.2f} | {cost.heat_pump_eur:.2f} | {cheaper} |"
+                + (f" {cost.heat_pump_share:.0%} |" if settings.capacity_known else "")
             )
         lines += [
             "",
-            f"Over these {len(days)} days: all gas {total_gas:.2f} EUR, all heat pump "
+            f"Over these {len(days)} days: all gas {total_gas:.2f} EUR, heat pump first "
             f"{total_hp:.2f} EUR, switching each day to the cheaper one {total_best:.2f} EUR.",
         ]
     return "\n".join(lines) + "\n"

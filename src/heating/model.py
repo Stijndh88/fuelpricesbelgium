@@ -9,7 +9,7 @@ COP, ``electricity price * boiler efficiency / gas price``.
 from __future__ import annotations
 
 from bisect import bisect_left
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # Typical air-to-air heat pump (split airco unit) COP by outdoor temperature (deg C). Generic
 # values in the range of EN 14511 datasheets; replace them with your own unit's datasheet.
@@ -59,6 +59,66 @@ class CopCurve:
         return None
 
 
+# EN 14825 "average" heating season (Strasbourg): hours per outdoor temperature bin. Used to
+# turn a datasheet SCOP into a COP curve. Design temperature -10 deg C, no heating from 16.
+EN14825_AVERAGE_BINS: tuple[tuple[int, int], ...] = (
+    (-10, 1), (-9, 25), (-8, 23), (-7, 24), (-6, 27), (-5, 68), (-4, 91), (-3, 89),
+    (-2, 165), (-1, 173), (0, 240), (1, 280), (2, 320), (3, 357), (4, 356), (5, 303),
+    (6, 330), (7, 326), (8, 348), (9, 335), (10, 315), (11, 215), (12, 169), (13, 151),
+    (14, 105), (15, 74),
+)  # fmt: skip
+
+
+def seasonal_cop(curve: CopCurve) -> float:
+    """The SCOP this COP curve gives over the EN 14825 average season.
+
+    Heat need in each bin is proportional to (16 - T) times the hours; the SCOP is the total
+    heat over the total electricity. Ignores part-load and backup-heater effects.
+    """
+    heat = sum(hours * (16 - t) for t, hours in EN14825_AVERAGE_BINS)
+    electricity = sum(hours * (16 - t) / curve.cop(t) for t, hours in EN14825_AVERAGE_BINS)
+    return heat / electricity
+
+
+def scaled_to_scop(curve: CopCurve, scop: float) -> CopCurve:
+    """The same curve shape, scaled so its seasonal COP matches a datasheet SCOP."""
+    factor = scop / seasonal_cop(curve)
+    return CopCurve(tuple((t, c * factor) for t, c in curve.points))
+
+
+@dataclass(frozen=True)
+class HeatPumpUnit:
+    """One outdoor unit, from its datasheet: rated heating power at +7 and -10 deg C, SCOP."""
+
+    name: str
+    heating_kw: float
+    heating_kw_at_minus10: float
+    scop: float
+
+    def capacity_kw(self, outdoor_temp: float) -> float:
+        """Heating power available at this temperature, linear between -10 and +7 deg C."""
+        if outdoor_temp >= 7:
+            return self.heating_kw
+        if outdoor_temp <= -10:
+            return self.heating_kw_at_minus10
+        span = self.heating_kw - self.heating_kw_at_minus10
+        return self.heating_kw_at_minus10 + span * (outdoor_temp + 10) / 17
+
+
+@dataclass(frozen=True)
+class HeatPumpSystem:
+    units: tuple[HeatPumpUnit, ...] = field(default_factory=tuple)
+
+    def capacity_kw(self, outdoor_temp: float) -> float:
+        return sum(u.capacity_kw(outdoor_temp) for u in self.units)
+
+    @property
+    def scop(self) -> float:
+        """Combined SCOP: total rated heat over the electricity each unit needs for its share."""
+        total = sum(u.heating_kw for u in self.units)
+        return total / sum(u.heating_kw / u.scop for u in self.units)
+
+
 @dataclass(frozen=True)
 class Prices:
     """All-in variable prices (energy, network, taxes, VAT), EUR per kWh."""
@@ -82,11 +142,14 @@ def break_even_cop(prices: Prices, boiler_efficiency: float) -> float:
 
 @dataclass(frozen=True)
 class DayCost:
+    """One day's heating cost with only gas, and with the heat pumps first (gas tops up)."""
+
     outdoor_temp: float
     heat_kwh: float
     cop: float
     gas_eur: float
     heat_pump_eur: float
+    heat_pump_share: float = 1.0  # part of the heat the heat pumps can deliver on their own
 
     @property
     def cheaper(self) -> str:
@@ -116,13 +179,20 @@ def day_cost(
     boiler_efficiency: float,
     loss_kwh_per_degree_day: float,
     base_temp: float,
+    capacity_kw: float | None = None,
 ) -> DayCost:
+    """Cost of the day's heat. With ``capacity_kw``, the heat pumps deliver at most that much
+    power around the clock and the gas boiler covers the rest."""
     heat = heat_demand_kwh(outdoor_temp, loss_kwh_per_degree_day, base_temp)
     cop = curve.cop(outdoor_temp)
+    from_heat_pump = heat if capacity_kw is None else min(heat, capacity_kw * 24)
+    gas_per_kwh = gas_cost_per_kwh_heat(prices, boiler_efficiency)
     return DayCost(
         outdoor_temp=outdoor_temp,
         heat_kwh=heat,
         cop=cop,
-        gas_eur=heat * gas_cost_per_kwh_heat(prices, boiler_efficiency),
-        heat_pump_eur=heat * heat_pump_cost_per_kwh_heat(prices, cop),
+        gas_eur=heat * gas_per_kwh,
+        heat_pump_eur=from_heat_pump * heat_pump_cost_per_kwh_heat(prices, cop)
+        + (heat - from_heat_pump) * gas_per_kwh,
+        heat_pump_share=from_heat_pump / heat if heat else 1.0,
     )
