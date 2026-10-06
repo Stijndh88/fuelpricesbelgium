@@ -11,6 +11,11 @@ when it pays to wait (or hurry) to fill up.
 - `python -m fuelprices.update` adds today's diesel and E10 max prices and the Brent crude price
   to `data/prices.sqlite`, one row per day. The "Daily price update" GitHub Action runs it every
   morning (and weekday afternoons) and commits the file. See [data/README.md](data/README.md).
+- The dashboard in `site/` (published with GitHub Pages by the "Publish dashboard" workflow)
+  shows the price history, the already published price for tomorrow and the refuel advice.
+  `python -m fuelprices.export` writes the data it reads to `site/data/prices.json`; the
+  advice comes from `data/advice.json` when it exists. Preview locally with
+  `python -m fuelprices.export && python -m http.server -d site`.
 - `fuelprices.rules` models when the government rules allow a price to go up or down.
   See [docs/price-rules.md](docs/price-rules.md) for sources and open questions.
 
