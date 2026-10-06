@@ -15,7 +15,7 @@ def _fetch(args: argparse.Namespace) -> None:
     records = fod.parse(args.html.read_text(encoding="utf-8")) if args.html else fod.fetch_prices()
     history = storage.update_history(args.history, records)
     for r in records:
-        print(f"{r.valid_from}  {r.product.label:<22} {r.price_eur_per_litre:.4f} EUR/l")
+        print(f"{r.valid_from}  {r.product.label:<36} {r.price_eur_per_litre:.4f} EUR/l")
     print(f"{len(history)} rows in {args.history}")
 
 
@@ -26,7 +26,7 @@ def _show(args: argparse.Namespace) -> None:
     if not latest:
         print(f"no prices in {args.history} yet; run `fuelprices fetch` first")
     for r in latest.values():
-        print(f"{r.valid_from}  {r.product.label:<22} {r.price_eur_per_litre:.4f} EUR/l")
+        print(f"{r.valid_from}  {r.product.label:<36} {r.price_eur_per_litre:.4f} EUR/l")
 
 
 def main(argv: list[str] | None = None) -> None:
