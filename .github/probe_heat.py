@@ -22,18 +22,6 @@ cost_of = dict(zip(days, costs))
 ser = calibrate.Series(tuple(days), tuple(costs), series.prices)
 first = days[0] + timedelta(days=120); split = last - timedelta(days=180)
 
-# 1. free-running replay with the existing grid
-res = []
-for params in calibrate.grid():
-    rep = calibrate.replay(Product.DIESEL_B7, ser, params)
-    res.append((calibrate.score_changes(rep, actual, first, split).f1, params))
-res.sort(key=lambda r: -r[0])
-print("free-running replay, top 4 by fit F1")
-for f1, p in res[:4]:
-    rep = calibrate.replay(Product.DIESEL_B7, ser, p)
-    tr = calibrate.score_changes(rep, actual, first, split); te = calibrate.score_changes(rep, actual, split + timedelta(days=1), last)
-    print("  ", p, "fit P/R", round(tr.precision, 2), round(tr.recall, 2), "held-out P/R", round(te.precision, 2), round(te.recall, 2), "n", te.real_changes, "exact", te.same_day)
-
 # 2. what the cost did on real change days (anchored on the previous real change)
 eff = [a.effective_from for a in actual]
 def wd(a, b):
@@ -67,48 +55,34 @@ for s in range(1, 9):
     qshare = sum(1 for x in q if abs(x[0]) > min(adev)) / max(len(q), 1)
     print(f"  {s}: n={len(ch)} day dev min {min(adev):.3f} med {st.median(adev):.3f} | avg dev min {min(vdev):.3f} med {st.median(vdev):.3f} | sign {sign:.2f} | quiet n={len(q)} share above {qshare:.2f}")
 
-# 3. anchored one-step prediction with the official cost
-def anchored(start, end, mode, recenter, lag=0):
-    sched = calibrate.Params(start, end, lag, recenter).schedule()
-    preds = {}
-    for d in days:
-        if d < first or d > last: continue
-        k = bisect.bisect_right(eff, d) - 1
-        if k < 0: continue
-        comp0 = eff[k] - timedelta(days=1)
-        if comp0 not in cost_of: continue
-        i = days.index(d); j = days.index(comp0)
-        if i < 7 or j < 7: continue
-        base = costs[j] if recenter == "day" else st.mean(costs[j - 6:j + 1])
-        th = sched.at(max(wd(comp0, d), 1))
-        today = costs[i - lag]; avg = st.mean(costs[i - lag - 6:i - lag + 1])
-        dd = (today - base) / base; da = (avg - base) / base
-        if mode == "both": up, dn = dd > th and da > th, dd < -th and da < -th
-        elif mode == "day": up, dn = dd > th, dd < -th
-        else: up, dn = da > th, da < -th
-        preds[d] = 1 if up else (-1 if dn else 0)
-    return preds
-def score(preds, a, b):
-    real = {x.effective_from: x.direction for x in actual if a <= x.effective_from <= b}
-    tp = fp = fn = 0
-    for d, p in preds.items():
-        e = d + timedelta(days=1)
-        if not a <= e <= b: continue
-        r = real.get(e, 0)
-        if p:
-            if r == p: tp += 1
-            else: fp += 1
-        elif r: fn += 1
-    P = tp / (tp + fp) if tp + fp else 0; R = tp / (tp + fn) if tp + fn else 0
-    return P, R, 2 * P * R / (P + R) if P + R else 0, tp + fn
-cands = []
-for s, e in itertools.product([x / 1000 for x in range(5, 61, 5)], [x / 1000 for x in range(5, 61, 5)]):
-    if e > s: continue
-    for mode, rc in itertools.product(("both", "day", "avg"), ("day", "average")):
-        pr = anchored(s, e, mode, rc)
-        cands.append((score(pr, first, split)[2], (s, e, mode, rc), pr))
-cands.sort(key=lambda r: -r[0])
-print("anchored one-step prediction with the official cost, top 6 by fit F1 (exact day)")
-for f, p, pr in cands[:6]:
-    tr = score(pr, first, split); te = score(pr, split + timedelta(days=1), last)
-    print("  ", p, "fit P/R", round(tr[0], 2), round(tr[1], 2), "held-out P/R", round(te[0], 2), round(te[1], 2), "n", te[3])
+# 4. does the price step equal the cost move, measured from day to day or from 7-day averages?
+import math
+eff_of = {a.effective_from: a for a in actual}
+res = {"day": [], "avg3": [], "avg5": [], "avg7": []}
+for k in range(1, len(actual)):
+    c = eff[k] - timedelta(days=1); c0 = eff[k - 1] - timedelta(days=1)
+    if c not in cost_of or c0 not in cost_of or c < first: continue
+    i, i0 = days.index(c), days.index(c0)
+    step = actual[k].step
+    for name, n in (("day", 1), ("avg3", 3), ("avg5", 5), ("avg7", 7)):
+        a1 = st.mean(costs[i - n + 1:i + 1]); a0 = st.mean(costs[i0 - n + 1:i0 + 1])
+        if abs(a1 - a0) > 0.003: res[name].append(step / (1.21 * (a1 - a0)))
+for name, r in res.items():
+    r.sort()
+    q = lambda f: r[int(len(r) * f)]
+    print(f"step / cost move ({name}): n={len(r)} q10 {q(0.1):.2f} q25 {q(0.25):.2f} median {q(0.5):.2f} q75 {q(0.75):.2f} q90 {q(0.9):.2f}")
+# the same on 2025-26 only
+# 5. how often does the heating cost (which follows the cost daily) move more than the band, without a diesel change?
+for th in (0.01, 0.02, 0.03):
+    n = m = 0
+    for k in range(1, len(actual)):
+        c0 = eff[k - 1] - timedelta(days=1); c = eff[k] - timedelta(days=1)
+        if c0 not in cost_of or c0 < first: continue
+        base = cost_of[c0]
+        d = c0
+        while d < c:
+            d += timedelta(days=1)
+            if d.weekday() >= 5 or d not in cost_of: continue
+            if abs(cost_of[d] - base) / base > th: m += 1
+            n += 1
+    print(f"quiet-or-change days with |day dev| above {th:.0%}: {m} of {n}")
