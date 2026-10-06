@@ -108,6 +108,7 @@ function renderAdvice(data) {
       const item = el("div", { class: "advice-item " + String(a.action || "").replace(/[^a-z_]/g, "") });
       item.append(el("div", { class: "advice-head" }, `${a.label || p.label}: ${a.headline || a.action || "–"}`));
       if (a.reason) item.append(el("div", { class: "advice-reason" }, a.reason));
+      if (a.market_note) item.append(el("div", { class: "advice-reason" }, "⚠ " + a.market_note));
       return item;
     });
   if (!items.length) return; // keep the placeholder
