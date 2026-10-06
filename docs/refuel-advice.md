@@ -35,8 +35,12 @@ Saturday, and the next one is computed on Monday and applies on Tuesday.
 - The wholesale diesel and petrol quotations (Platts Rotterdam) that actually trigger a change are
   not free. Brent is only a stand-in: the refining margin can move on its own, as it did for
   diesel in the 2 October 2026 newsletter ("narrowly escaped an increase").
-- The band widths are placeholders until calibrated (see [price-rules.md](price-rules.md)).
-- The EUR/USD rate is fixed at 1.10.
+- The band widths are fitted to the real price history but the fit is not good enough yet
+  (about half of the real changes are reproduced; see [price-rules.md](price-rules.md)). Until a fit
+  scores at least 70% precision and recall on days it was not fitted on, every prediction beyond
+  tomorrow's published price has `is_guess: true` and says "(a guess)". The fit is re-run daily and
+  written to `data/calibration.json`; `advice.json` carries a `calibration` block per product.
+- Brent and the diesel/gasoline shock flag use a fixed EUR/USD rate of 1.10.
 - Belgian public holidays, government price freezes and pump prices below the maximum.
 
 ## Backtest

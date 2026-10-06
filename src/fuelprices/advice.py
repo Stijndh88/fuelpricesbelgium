@@ -26,7 +26,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, timedelta
 from pathlib import Path
 
-from fuelprices import history, rules
+from fuelprices import calibrate, history, rules
 from fuelprices.history import DailyPrices
 from fuelprices.products import Product
 
@@ -52,6 +52,7 @@ ADVISED_PRODUCTS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
 # A move of the market of at least this fraction over SHOCK_DAYS calendar days counts as a shock.
 SHOCK_THRESHOLD = 0.05
 SHOCK_DAYS = 5
+BACKTEST_DAYS = 365  # the backtest looks at the most recent year only
 LITRES_PER_GALLON = 3.78541
 # Market series checked for shocks per product: (history column, name in the reason).
 SHOCK_SERIES = {
@@ -62,7 +63,9 @@ SHOCK_SERIES = {
 CAVEATS = [
     "The wholesale diesel and petrol quotations that actually trigger a change are not free, "
     "so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
-    "The band widths of the price rules are placeholders until calibrated on the history.",
+    "The exact band widths of the price rules are not public. They are fitted to the real "
+    "price history (see the calibration block); until the fit reproduces the real changes well "
+    "enough on days it was not fitted on, predictions beyond tomorrow are labelled a guess.",
     "Brent and US futures are converted at a fixed EUR/USD rate. The diesel and gasoline futures "
     "are New York contracts, a stand-in for the Rotterdam quotations Belgium uses.",
     "The market shock flag looks at prices, not news: news only counts once markets move.",
@@ -79,11 +82,12 @@ class Advice:
     headline: str
     reason: str
     expected_change_cents: float | None
-    basis: str  # "published", "shock", "brent" or "none"
+    basis: str  # "published", "rules", "shock", "brent" or "none"
     price_today: float | None
     price_tomorrow: float | None
     next_possible_change: str
     market_note: str | None = None  # a big market move, shown even when it does not decide
+    is_guess: bool = True  # False only for a published price or a rules fit that passed its test
 
 
 @dataclass(frozen=True)
@@ -199,6 +203,7 @@ def _make(product, action, reason, change, basis, today_price, tomorrow_price, n
         price_tomorrow=tomorrow_price,
         next_possible_change=next_change.isoformat(),
         market_note=note,
+        is_guess=basis not in ("published", "rules", "none"),
     )
 
 
@@ -208,12 +213,18 @@ def advise(
     today: date,
     schedule: rules.ThresholdSchedule = rules.UNCONFIRMED_SCHEDULE,
     shock_threshold: float | None = SHOCK_THRESHOLD,
+    calibration: calibrate.Calibration | None = None,
 ) -> Advice:
     """Advise whether to refuel ``product`` today, using only ``rows`` (the stored history).
 
     Rows dated after tomorrow are ignored, so the same function replays history in the backtest.
-    ``shock_threshold=None`` turns the market shock flag off.
+    ``shock_threshold=None`` turns the market shock flag off. A ``calibration`` whose fit passed
+    its held-out test supplies the band widths and lets the rules band predict a change as
+    "rules"; without one, or when it failed, that prediction stays labelled a guess.
     """
+    trusted = calibration is not None and calibration.trusted and calibration.params is not None
+    if trusted:
+        schedule = calibration.params.schedule()
     column = ADVISED_PRODUCTS[product]
     by_day = {r.day: r for r in rows if r.day <= today + timedelta(days=1)}
     tomorrow = today + timedelta(days=1)
@@ -287,10 +298,12 @@ def advise(
         reason = f"{big_move.text}: a rise is likely from {when} or soon after."
         return make(FILL_UP, reason, big_move.eur_per_litre, "shock", next_change)
 
-    return _brent_advice(product, by_day, today, column, schedule, make, next_change)
+    return _brent_advice(
+        product, by_day, today, column, schedule, make, next_change, "rules" if trusted else "brent"
+    )
 
 
-def _brent_advice(product, by_day, today, column, schedule, make_any, next_change):
+def _brent_advice(product, by_day, today, column, schedule, make_any, next_change, basis="brent"):
     def make(action, reason, change, basis):
         return make_any(action, reason, change, basis, next_change)
 
@@ -329,19 +342,30 @@ def _brent_advice(product, by_day, today, column, schedule, make_any, next_chang
             NO_DIFFERENCE,
             f"{brent_text}: inside the band, no change expected by {when}.",
             0.0,
-            "brent",
+            basis,
         )
+    label = "likely" if basis == "rules" else "possible (a guess)"
     if move < 0:
-        return make(WAIT, f"{brent_text}: a drop is likely from {when}.", expected, "brent")
-    return make(FILL_UP, f"{brent_text}: a rise is likely from {when}.", expected, "brent")
+        return make(WAIT, f"{brent_text}: a drop is {label} from {when}.", expected, basis)
+    return make(FILL_UP, f"{brent_text}: a rise is {label} from {when}.", expected, basis)
 
 
 def advise_all(
-    conn: sqlite3.Connection, today: date, shock_threshold: float | None = SHOCK_THRESHOLD
+    conn: sqlite3.Connection,
+    today: date,
+    shock_threshold: float | None = SHOCK_THRESHOLD,
+    calibrations: dict[str, calibrate.Calibration] | None = None,
 ) -> list[Advice]:
     rows = history.all_rows(conn)
+    calibrations = calibrations or {}
     return [
-        advise(product, rows, today, shock_threshold=shock_threshold)
+        advise(
+            product,
+            rows,
+            today,
+            shock_threshold=shock_threshold,
+            calibration=calibrations.get(product.code),
+        )
         for product in ADVISED_PRODUCTS
     ]
 
@@ -374,7 +398,10 @@ def backtest(
     column = ADVISED_PRODUCTS[product]
     prices = {r.day: getattr(r, column) for r in rows if getattr(r, column) is not None}
     savings = []
+    recent = max(prices, default=None)
     for start in sorted(prices):
+        if recent and (recent - start).days > BACKTEST_DAYS:
+            continue
         window = [start + timedelta(days=i) for i in range(horizon_days)]
         if any(day not in prices for day in window):
             continue
@@ -413,24 +440,50 @@ def backtest(
 
 
 def export(
-    conn: sqlite3.Connection, today: date, shock_threshold: float | None = SHOCK_THRESHOLD
+    conn: sqlite3.Connection,
+    today: date,
+    shock_threshold: float | None = SHOCK_THRESHOLD,
+    calibrations: dict[str, calibrate.Calibration] | None = None,
 ) -> dict:
     """Advice for today plus a backtest with and without the market shock flag."""
     rows = history.all_rows(conn)
+    calibrations = calibrations or {}
     thresholds = [None] if shock_threshold is None else [None, shock_threshold]
     return {
         "as_of": today.isoformat(),
         "shock_threshold": shock_threshold,
         "advice": [
-            asdict(advise(p, rows, today, shock_threshold=shock_threshold))
+            asdict(
+                advise(
+                    p,
+                    rows,
+                    today,
+                    shock_threshold=shock_threshold,
+                    calibration=calibrations.get(p.code),
+                )
+            )
             for p in ADVISED_PRODUCTS
         ],
+        "calibration": {code: _calibration_summary(c) for code, c in calibrations.items()},
         "caveats": CAVEATS,
         "backtest": [
             asdict(backtest(p, rows, shock_threshold=t))
             for p in ADVISED_PRODUCTS
             for t in thresholds
         ],
+    }
+
+
+def _calibration_summary(c: calibrate.Calibration) -> dict:
+    test = c.test
+    return {
+        "trusted": c.trusted,
+        "note": c.note,
+        "held_out_from": c.test_from,
+        "held_out_to": c.test_to,
+        "real_changes": test.real_changes if test else None,
+        "precision": round(test.precision, 2) if test else None,
+        "recall": round(test.recall, 2) if test else None,
     }
 
 

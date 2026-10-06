@@ -36,7 +36,7 @@ def _advise(args: argparse.Namespace) -> None:
         args.shock_threshold = None
     conn = history.connect(args.db)
     try:
-        data = advice.export(conn, today, args.shock_threshold)
+        data = advice.export(conn, today, args.shock_threshold, calibrate.load(args.calibration))
     finally:
         conn.close()
     print(f"Refuel advice for {today:%a %d %b %Y}")
@@ -88,6 +88,12 @@ def main(argv: list[str] | None = None) -> None:
     advise = commands.add_parser("advise", help="fill up today, wait, or no difference")
     advise.add_argument("--db", type=Path, default=history.DEFAULT_DB_PATH, help="SQLite history")
     advise.add_argument("--json", type=Path, help="also write the advice to this JSON file")
+    advise.add_argument(
+        "--calibration",
+        type=Path,
+        default=calibrate.DEFAULT_PATH,
+        help="fitted rules from `fuelprices calibrate` (predictions are guesses without it)",
+    )
     advise.add_argument("--date", type=date.fromisoformat, help="advise as of this day")
     advise.add_argument(
         "--shock-threshold",
