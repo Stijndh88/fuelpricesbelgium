@@ -13,7 +13,7 @@
       "price_today": 2.432,
       "price_tomorrow": 2.392,
       "next_possible_change": "2026-10-07",
-      "market_note": null,
+      "market_note": "Big market move: Diesel futures -5.1% since 01/10.",
       "reason_code": "wait_published",
       "reason_params": {
         "day": "2026-10-07",
@@ -21,7 +21,11 @@
         "today": 2.432,
         "tomorrow": 2.392
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Diesel futures",
+        "pct": -5.1,
+        "since": "2026-10-01"
+      },
       "is_guess": false
     },
     {
@@ -29,23 +33,23 @@
       "label": "Benzine 95 RON E10",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Gasoline futures -5.5% since 01/10: a drop is likely from Thu 08/10 or soon after.",
-      "expected_change_cents": -5.4,
+      "reason": "Gasoline futures -10.6% since 01/10: a drop is likely from Thu 08/10 or soon after.",
+      "expected_change_cents": -10.4,
       "basis": "shock",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
       "next_possible_change": "2026-10-08",
-      "market_note": "Big market move: Gasoline futures -5.5% since 01/10.",
+      "market_note": "Big market move: Gasoline futures -10.6% since 01/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Gasoline futures",
-        "pct": -5.5,
+        "pct": -10.6,
         "since": "2026-10-01",
         "when": "2026-10-08"
       },
       "market_note_params": {
         "name": "Gasoline futures",
-        "pct": -5.5,
+        "pct": -10.6,
         "since": "2026-10-01"
       },
       "is_guess": true
@@ -58,8 +62,8 @@
       "held_out_from": "2026-04-11",
       "held_out_to": "2026-10-07",
       "real_changes": 38,
-      "precision": 0.65,
-      "recall": 0.39
+      "precision": 0.73,
+      "recall": 0.63
     },
     "e10": {
       "trusted": false,
@@ -67,7 +71,7 @@
       "held_out_from": "2026-04-11",
       "held_out_to": "2026-10-07",
       "real_changes": 26,
-      "precision": 0.41,
+      "precision": 0.39,
       "recall": 0.27
     }
   },
