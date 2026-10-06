@@ -61,6 +61,7 @@ in logs). Any that is unset or empty falls back to the default.
 | `HEATING_ANNUAL_GAS_KWH` | yearly gas use from the bill | 17000 |
 | `HEATING_BOILER_EFFICIENCY` | e.g. 0.9 (0,9 also works) | 0.9 |
 | `HEATING_HOT_WATER_SHARE` | optional, share of gas used for hot water | 0.15 |
+| `HEATING_CAPACITY_EUR_PER_KW_YEAR` | capacity tariff of your digital meter (0 for a classic meter) | 55 |
 
 When any of them is set, the report on the Action's summary page (visible to everyone) shows
 only the verdict: the switch temperature and which option is cheaper each day. It leaves out
@@ -81,12 +82,25 @@ HEATING_GAS_EUR_PER_KWH=0.11 HEATING_ELECTRICITY_EUR_PER_KWH=0.30 python -m heat
   (Samsung AJ040 and AJ068, from the datasheets). Measured COP values at a few outdoor
   temperatures would replace the SCOP-based estimate below.
 
+## The capacity tariff
+
+With a Flemish digital meter the network operator bills EUR per kW per year on the average of
+the highest 15-minute power of each month (never less than 2.5 kW). Heating with the heat pumps
+raises those peaks, so the yearly estimate in the report includes it:
+- The heat pumps' electric power in a typical cold spell of each heating month (Oct to Apr,
+  from -7 °C in January to +1 °C in October) is added on top of the household's existing peak.
+  Two figures are shown: heat pumps following the load, and running flat out. Both assume your
+  own peak is already above 2.5 kW and happens at the same moment as the heat pumps.
+- The yearly estimate spreads the heat need over an average heating season (EN 14825) and counts
+  gas for the hours when the heat pumps are at their power limit.
+- The gas price should be the average price of the gas you stop using. If moving the heating
+  to the heat pumps takes you into a lower consumption class of the gas network, that includes
+  the change in the distribution fee, so it is not the same as the plain price per kWh.
+
 ## Limits
 
 - Split airco units usually heat one room each; if they can't heat the whole house, the real
   answer is a mix. The model assumes they can.
-- In Flanders the capacity tariff charges for your monthly peak (kW). Running several units at
-  once can raise it; that cost is not in the model yet.
 - The COP is taken at the daily mean temperature; nights are colder, so the heat pump
   does slightly worse than shown on days near the switch temperature.
 - From 1 August 2026 excise on gas rises and on electricity falls in steps to 2029; from

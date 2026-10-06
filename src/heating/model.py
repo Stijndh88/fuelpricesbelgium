@@ -196,3 +196,88 @@ def day_cost(
         + (heat - from_heat_pump) * gas_per_kwh,
         heat_pump_share=from_heat_pump / heat if heat else 1.0,
     )
+
+
+# Typical coldest hours of a heating month in Belgium (deg C). The capacity tariff bills the
+# highest 15-minute power of each month, and the heat pumps draw most then. Months not listed
+# have no heating and add nothing. Rough values, not measurements.
+COLD_SPELL_TEMPS: dict[int, float] = {
+    10: 1.0,
+    11: -3.0,
+    12: -6.0,
+    1: -7.0,
+    2: -6.0,
+    3: -3.0,
+    4: 0.0,
+}
+
+
+@dataclass(frozen=True)
+class AnnualEstimate:
+    """A normal year's heating cost with gas only versus heat pumps first (gas tops up)."""
+
+    heat_kwh: float
+    gas_only_eur: float
+    heat_pump_eur: float  # electricity plus the gas still needed on the coldest hours
+    electricity_kwh: float
+    capacity_extra_kw: float  # yearly average rise of the monthly peak, heat pumps follow the load
+    capacity_eur: float
+    capacity_extra_kw_max: float  # same, with the heat pumps running flat out in the cold spell
+    capacity_eur_max: float
+
+    @property
+    def saving_before_capacity_eur(self) -> float:
+        return self.gas_only_eur - self.heat_pump_eur
+
+    @property
+    def net_saving_eur(self) -> float:
+        return self.saving_before_capacity_eur - self.capacity_eur
+
+    @property
+    def net_saving_worst_eur(self) -> float:
+        return self.saving_before_capacity_eur - self.capacity_eur_max
+
+
+def annual_estimate(
+    annual_heat_kwh: float,
+    prices: Prices,
+    curve: CopCurve,
+    system: HeatPumpSystem,
+    boiler_efficiency: float,
+    capacity_eur_per_kw_year: float,
+) -> AnnualEstimate:
+    """Cost of a normal year over the EN 14825 temperature bins.
+
+    The heat need is spread over the bins in proportion to (16 - T) times the hours. The heat
+    pumps cover the load up to their available power, gas the rest. For the capacity tariff the
+    heat pumps' electric power in each month's cold spell is added on top of the household's
+    existing monthly peak, assuming that peak is above the 2.5 kW minimum and coincides with the
+    heat pumps. Two figures: the heat pumps following the load, and (``_max``) running flat out,
+    as when warming up a cold house.
+    """
+    degree_hours = sum(hours * (16 - t) for t, hours in EN14825_AVERAGE_BINS)
+    kw_per_degree = annual_heat_kwh / degree_hours
+    gas_per_kwh_heat = gas_cost_per_kwh_heat(prices, boiler_efficiency)
+    electricity_kwh = electricity_eur = gas_eur = 0.0
+    for t, hours in EN14825_AVERAGE_BINS:
+        load_kw = kw_per_degree * (16 - t)
+        from_heat_pump = min(load_kw, system.capacity_kw(t))
+        electricity_kwh += hours * from_heat_pump / curve.cop(t)
+        gas_eur += hours * (load_kw - from_heat_pump) * gas_per_kwh_heat
+    electricity_eur = electricity_kwh * prices.electricity
+    peaks, peaks_max = [], []
+    for t in COLD_SPELL_TEMPS.values():
+        load_kw = kw_per_degree * (16 - t)
+        peaks.append(min(load_kw, system.capacity_kw(t)) / curve.cop(t))
+        peaks_max.append(system.capacity_kw(t) / curve.cop(t))
+    extra_kw, extra_kw_max = sum(peaks) / 12, sum(peaks_max) / 12
+    return AnnualEstimate(
+        heat_kwh=annual_heat_kwh,
+        gas_only_eur=annual_heat_kwh * gas_per_kwh_heat,
+        heat_pump_eur=electricity_eur + gas_eur,
+        electricity_kwh=electricity_kwh,
+        capacity_extra_kw=extra_kw,
+        capacity_eur=extra_kw * capacity_eur_per_kw_year,
+        capacity_extra_kw_max=extra_kw_max,
+        capacity_eur_max=extra_kw_max * capacity_eur_per_kw_year,
+    )

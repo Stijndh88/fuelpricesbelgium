@@ -19,6 +19,12 @@ hot_water_share = 0.15
 base_temp = 16.5
 degree_days = 2400
 
+[electricity]
+# Flemish digital meter: the network operator bills EUR per kW per year on the average of the
+# highest 15-minute power of each month (minimum 2.5 kW). Typical value 52-61 depending on the
+# operator; set 0 for a classic meter, which has no capacity tariff.
+capacity_eur_per_kw_year = 55
+
 # Outdoor units of the airco system, from their datasheets: rated heating power (kW) at +7 °C
 # and at -10 °C, and SCOP. Without a cop_curve below, a generic COP curve is scaled so its
 # seasonal average matches the combined SCOP.
