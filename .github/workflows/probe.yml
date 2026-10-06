@@ -1,18 +1,67 @@
-name: Temporary probe
+name: Temporary backfill check
 on: push
+permissions:
+  contents: read
 jobs:
-  probe:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          B=https://petrolfed.be
-          curl -sS -L -m 60 -A fb -o /tmp/all.json "$B/nl/dms_maximumprijs_export/all/2011-01-01/2026-10-07"
-          python3 - <<'PY'
-          import json
-          d=json.load(open('/tmp/all.json'))
-          for i,x in enumerate(d):
-              data=x.get('data',{})
-              ks=sorted(data)
-              meta={k:v for k,v in x.items() if k!='data'}
-              print(i,json.dumps(meta,ensure_ascii=False)[:200],len(ks),ks[0] if ks else None,ks[-1] if ks else None,data[ks[-1]] if ks else None)
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Backfill a scratch copy of the history since 2019 (nothing is committed)
+        run: |
+          cp data/prices.sqlite /tmp/prices.sqlite
+          python -m fuelprices.backfill --db /tmp/prices.sqlite --since 2019-01-01
+      - name: Fit the rules and print the report
+        run: fuelprices calibrate --db /tmp/prices.sqlite --json /tmp/calibration.json
+      - name: Diagnostics
+        run: |
+          python - <<'PY'
+          import sqlite3
+          from datetime import date
+          from fuelprices import calibrate, history
+          from fuelprices.products import Product
+          conn = history.connect("/tmp/prices.sqlite")
+          rows = history.all_rows(conn)
+          print("rows", len(rows), rows[0].day, rows[-1].day)
+          for r in rows[-8:]:
+              print(r)
+          for product in (Product.DIESEL_B7, Product.E10):
+              series = calibrate.build_series(rows, product)
+              actual = calibrate.real_changes(series.prices)
+              print("==", product.code, "days with cost", len(series.days), "real changes", len(actual))
+              by_year = {}
+              for a in actual:
+                  by_year[a.effective_from.year] = by_year.get(a.effective_from.year, 0) + 1
+              print("real changes per year", dict(sorted(by_year.items())))
+              cal = calibrate.calibrate_product(product, rows)
+              if cal.params is None:
+                  continue
+              replayed = calibrate.replay(product, series, cal.params)
+              first = series.days[0]
+              print("per-year score of the best params:")
+              for year in range(2020, 2027):
+                  s = calibrate.score_changes(replayed, actual, date(year, 1, 1), date(year, 12, 31))
+                  if s.real_changes or s.false_alarms:
+                      print(" ", year, "real", s.real_changes, "hits", s.hits, "same-day", s.same_day, "misses", s.misses, "false", s.false_alarms, f"P {s.precision:.0%} R {s.recall:.0%}")
+              # top parameter sets on the fit period
+              from datetime import timedelta
+              last = max(series.prices); split = last - timedelta(days=calibrate.HOLDOUT_DAYS)
+              start = first + timedelta(days=calibrate.WARMUP_DAYS)
+              scored = []
+              for p in calibrate.grid():
+                  rp = calibrate.replay(product, series, p)
+                  scored.append((calibrate.score_changes(rp, actual, start, split).f1, p))
+              scored.sort(key=lambda x: -x[0])
+              print("top 6 parameter sets by F1 on the fit period:")
+              for f1, p in scored[:6]:
+                  print(f"  F1 {f1:.2f}", p)
+              print("last 14 real vs replayed changes:")
+              for a in actual[-14:]:
+                  print("  real", a.effective_from, a.direction, round(a.step, 3))
+              for c in replayed[-14:]:
+                  print("  replay", c.effective_from, c.direction)
           PY

@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     diesel_product REAL,              -- wholesale product cost diesel, EUR/L (rules input)
     e10_product    REAL,              -- wholesale product cost petrol, EUR/L (rules input)
     brent_usd      REAL,              -- Brent crude front-month future close, USD per barrel
+    ulsd_usd_gal   REAL,              -- NYMEX ULSD (diesel) future, USD per gallon
+    rbob_usd_gal   REAL,              -- NYMEX RBOB (gasoline) future, USD per gallon
+    eur_usd        REAL,              -- EUR/USD exchange rate (USD per EUR)
     updated_at     TEXT NOT NULL      -- UTC timestamp of the last write to this row
 );
 """
@@ -35,6 +38,7 @@ VALUE_COLUMNS = (
     "brent_usd",
     "ulsd_usd_gal",
     "rbob_usd_gal",
+    "eur_usd",
 )
 
 
@@ -48,6 +52,7 @@ class DailyPrices:
     brent_usd: float | None = None
     ulsd_usd_gal: float | None = None
     rbob_usd_gal: float | None = None
+    eur_usd: float | None = None
 
 
 def connect(path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:

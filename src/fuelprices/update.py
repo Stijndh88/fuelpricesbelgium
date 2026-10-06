@@ -18,16 +18,18 @@ from fuelprices import crude, history
 from fuelprices.history import DailyPrices
 from fuelprices.models import PriceRecord
 from fuelprices.products import Product
-from fuelprices.sources import fod
+from fuelprices.sources import fod, petrolfed
 
 log = logging.getLogger(__name__)
 
 BRENT_LOOKBACK_DAYS = 14
+MAX_PRICE_LOOKBACK_DAYS = 14
 
 # Which history column each tracked product's official max price goes into.
 MAX_PRICE_COLUMNS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
 
 MaxPriceFetcher = Callable[[], Iterable[PriceRecord]]
+DailyMaxFetcher = Callable[[date], Iterable[PriceRecord]]
 BrentFetcher = Callable[[date], dict[date, float]]
 FuturesFetcher = Callable[[date], dict[str, dict[date, float]]]
 
@@ -42,17 +44,24 @@ def to_daily(records: Iterable[PriceRecord]) -> list[DailyPrices]:
     return [DailyPrices(day=day, **values) for day, values in sorted(by_day.items())]
 
 
+def fetch_petrolfed(since: date) -> list[PriceRecord]:
+    """Daily max prices from petrolfed.be from ``since`` until tomorrow."""
+    return petrolfed.to_records(petrolfed.fetch(since, date.today() + timedelta(days=1)))
+
+
 def run(
     conn,
     today: date,
     fetch_max: MaxPriceFetcher | None = None,
     fetch_brent: BrentFetcher | None = None,
     fetch_futures: FuturesFetcher | None = None,
+    fetch_daily_max: DailyMaxFetcher | None = None,
 ) -> list[str]:
     """Fetch every source and store the results. Returns the names of failed sources."""
     fetch_max = fetch_max or fod.fetch_prices
     fetch_brent = fetch_brent or crude.fetch_brent
     fetch_futures = fetch_futures or crude.fetch_product_futures
+    fetch_daily_max = fetch_daily_max or fetch_petrolfed
     failed = []
 
     try:
@@ -68,6 +77,17 @@ def run(
         log.info(
             "official max prices from %s: diesel %s, E10 %s", row.day, row.diesel_max, row.e10_max
         )
+
+    # Second source: one price per calendar day, today's and tomorrow's included.
+    try:
+        daily = to_daily(fetch_daily_max(today - timedelta(days=MAX_PRICE_LOOKBACK_DAYS)))
+    except Exception:
+        log.exception("petrolfed max prices: fetch failed")
+        failed.append("petrolfed")
+        daily = []
+    for row in daily:
+        history.upsert(conn, row)
+    rows = [*rows, *daily]
 
     try:
         brent = fetch_brent(today - timedelta(days=BRENT_LOOKBACK_DAYS))
@@ -114,8 +134,9 @@ def main(argv: list[str] | None = None) -> int:
         failed = run(conn, date.today(), fetch_max=fetch_max)
     finally:
         conn.close()
-    # The official max prices are the point of the job; missing market prices are tolerated.
-    return 1 if "max_prices" in failed else 0
+    # The official max prices are the point of the job: fail when neither source delivered them.
+    # Missing market prices are tolerated.
+    return 1 if "max_prices" in failed and "petrolfed" in failed else 0
 
 
 if __name__ == "__main__":

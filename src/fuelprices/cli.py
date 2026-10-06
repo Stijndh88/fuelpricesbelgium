@@ -6,7 +6,7 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from fuelprices import advice, history, storage
+from fuelprices import advice, calibrate, history, storage
 from fuelprices.sources import fod
 
 DEFAULT_HISTORY = Path("data/max_prices.csv")
@@ -61,6 +61,18 @@ def _advise(args: argparse.Namespace) -> None:
         print(f"{'wrote' if written else 'unchanged'} {args.json}")
 
 
+def _calibrate(args: argparse.Namespace) -> None:
+    conn = history.connect(args.db)
+    try:
+        calibrations = calibrate.calibrate_all(history.all_rows(conn))
+    finally:
+        conn.close()
+    print(calibrate.report(calibrations))
+    if args.json:
+        written = calibrate.save(args.json, calibrations)
+        print(f"{'wrote' if written else 'unchanged'} {args.json}")
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="fuelprices", description=__doc__)
     parser.add_argument("--history", type=Path, default=DEFAULT_HISTORY, help="price history CSV")
@@ -84,6 +96,11 @@ def main(argv: list[str] | None = None) -> None:
         help="market move (fraction) that counts as a shock; 0 or less turns the flag off",
     )
     advise.set_defaults(handler=_advise)
+
+    cal = commands.add_parser("calibrate", help="fit the price-change rules to the stored history")
+    cal.add_argument("--db", type=Path, default=history.DEFAULT_DB_PATH, help="SQLite history")
+    cal.add_argument("--json", type=Path, help="also write the fit to this JSON file")
+    cal.set_defaults(handler=_calibrate)
 
     args = parser.parse_args(argv)
     args.handler(args)
