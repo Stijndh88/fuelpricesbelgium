@@ -1,0 +1,19 @@
+name: Probe crude sources (temporary)
+on: pull_request
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+          for u in \
+            "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DCOILBRENTEU&cosd=2026-09-20" \
+            "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?range=1mo&interval=1d" \
+            "https://stooq.com/q/d/l/?s=cb.f&i=d" \
+            "https://www.eia.gov/dnav/pet/hist_xls/RBRTEd.xls"; do
+            for agent in "fuelpricesbelgium" "$UA"; do
+              echo "== $u [$agent]"
+              curl -sS -m 40 -A "$agent" -o out.txt -w "%{http_code} %{size_download}B %{time_total}s\n" "$u" || true
+              head -c 300 out.txt; echo
+            done
+          done
