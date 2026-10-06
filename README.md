@@ -11,6 +11,10 @@ when it pays to wait (or hurry) to fill up.
 - `python -m fuelprices.update` adds today's diesel and E10 max prices and the Brent crude price
   to `data/prices.sqlite`, one row per day. The "Daily price update" GitHub Action runs it every
   morning (and weekday afternoons) and commits the file. See [data/README.md](data/README.md).
+- `fuelprices advise` says per product (diesel B7, E10) whether to **fill up today**, **wait**
+  or that it makes **no difference**, with a one-line reason and the expected change in cent/L,
+  plus a backtest against filling up on a random day. The daily job writes the same to
+  `data/advice.json` for the dashboard. See [docs/refuel-advice.md](docs/refuel-advice.md).
 - `fuelprices.rules` models when the government rules allow a price to go up or down.
   See [docs/price-rules.md](docs/price-rules.md) for sources and open questions.
 - `python -m heating` compares heating the house with gas or with the heat pumps (airco units)
@@ -26,4 +30,5 @@ ruff check . && ruff format --check .
 fuelprices fetch            # needs access to petrolprices.economie.fgov.be
 fuelprices fetch --html tests/fixtures/petrolprices_nl.html   # offline, from a saved page
 fuelprices show
+fuelprices advise           # add --json data/advice.json to write the file
 ```
