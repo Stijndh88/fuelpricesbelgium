@@ -221,3 +221,43 @@ def test_tomorrow_published_but_today_unknown_says_so():
     a = advice.advise(Product.DIESEL_B7, rows, date(2026, 10, 6))
     assert a.action == advice.NO_DIFFERENCE
     assert "today's is not stored yet" in a.reason
+
+
+def _fit(trusted):
+    from fuelprices import calibrate
+
+    return calibrate.Calibration(
+        "diesel_b7",
+        calibrate.Params(0.03, 0.015, 0, "day"),
+        "2020-01-01", "2026-04-10", "2026-04-11", "2026-10-07",
+        calibrate.Score(30, 5, 3),
+        calibrate.Score(30, 5, 3) if trusted else calibrate.Score(10, 25, 20),
+        0.8,
+        trusted,
+        "note",
+    )  # fmt: skip
+
+
+def _falling_brent_rows():
+    start = MON - timedelta(days=9)
+    brent = [90.0] * 5 + [80.0] * 5
+    return days(start, [2.40] * 10, brent)
+
+
+def test_brent_prediction_is_a_guess_without_a_trusted_fit():
+    rows = _falling_brent_rows()
+    a = advice.advise(Product.DIESEL_B7, rows, MON, shock_threshold=None, calibration=_fit(False))
+    assert a.action == advice.WAIT and a.basis == "brent" and a.is_guess
+    assert "a guess" in a.reason
+
+
+def test_trusted_fit_turns_the_prediction_into_rules_advice():
+    rows = _falling_brent_rows()
+    a = advice.advise(Product.DIESEL_B7, rows, MON, shock_threshold=None, calibration=_fit(True))
+    assert a.action == advice.WAIT and a.basis == "rules" and not a.is_guess
+    assert "likely" in a.reason
+
+
+def test_published_price_is_never_a_guess():
+    a = advice.advise(Product.DIESEL_B7, days(MON, [2.40, 2.37]), MON)
+    assert not a.is_guess

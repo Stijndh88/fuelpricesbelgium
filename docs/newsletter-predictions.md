@@ -19,37 +19,32 @@ left out.
 The product prices are the author's own quotes and have not been checked against the
 quotation `fuelprices.rules` expects, so they are not in `data/prices.sqlite`.
 
-## Backfilled max prices
+## Checked against the official history
 
-`python -m fuelprices.newsletter backfill` writes the max prices pinned down by the issues into
-`data/prices.sqlite` for days that have none (189 days, 10 March to 7 October). A day is filled
-when an issue states its price, or when two stated prices on either side are equal. When two
-stated prices differ, the days in between stay empty because the day of the change is unknown:
-14 diesel and 12 E10 days. Existing values (from the FOD page) are never overwritten.
-
-Over this period diesel changed 32 times from one day to the next, a median of 6.2 cent/L and at
-most 18.2; E10 changed 18 times, a median of 5.2 and at most 11.8. The smallest steps (0.7 to
-1.0 cent/L on 1 July and 1 October, 1.4 on 7 May) are not market moves. Only changes between two
-consecutive known days are counted, so changes next to a gap are missing.
+The max prices stated in the issues were compared with `data/prices.sqlite` (the official
+history, backfilled from petrolfed.be): of about 1,000 stated prices, 12 differ, mostly by 0.2 to
+0.3 cent/L, in March, May, June and July (the largest, E10 on 24 to 30 July, is 2.0 cent/L). The
+list is `python -m fuelprices.newsletter check`. Treat the stated prices as estimates and the
+history as the truth; the product and crude columns have no second source.
 
 ## How accurate were the forecasts?
 
 `python -m fuelprices.newsletter score` checks every forecast that was not already an announced
-price: did the max price move in the forecast direction by the last forecast day, compared with
-the price on the newsletter date? Forecasts without a day, or without a known price on both days,
-are skipped (73 could be scored).
+price: did the official max price move in the forecast direction by the last forecast day,
+compared with the price on the newsletter date? Forecasts without a day are skipped (90 could be
+scored).
 
 | | right | share |
 |---|---|---|
-| diesel, firm | 25 of 30 | 83% |
-| E10, firm | 19 of 28 | 68% |
-| all firm | 44 of 58 | 76% |
-| all conditional ("if the product price holds") | 8 of 15 | 53% |
+| diesel, firm | 29 of 34 | 85% |
+| E10, firm | 29 of 38 | 76% |
+| all firm | 58 of 72 | 81% |
+| all conditional ("if the product price holds") | 10 of 18 | 56% |
 
 Every miss was a change that had not happened yet by the last forecast day (price unchanged),
-none was in the wrong direction. Sizes are rarely given: for the 3 scored forecasts with a size
-the average error was 3.9 cent/L. E10 forecasts miss more often than diesel, and conditional ones
-are close to a coin flip.
+none was in the wrong direction, so the direction is reliable and the timing is the weak point.
+Sizes are rarely given: for the 6 correct forecasts with a size the average error was 2.6
+cent/L. E10 forecasts miss more often than diesel, and conditional ones are close to a coin flip.
 
 The numbers were read out of the issues by hand (partly by parallel readers) and spot checks of
 the whole file are advisable before a rule depends on one row. The issue dates use the header

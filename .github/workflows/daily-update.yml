@@ -5,6 +5,11 @@ name: Daily price update
 # a day: a run without new prices leaves the file untouched.
 on:
   workflow_dispatch:
+    inputs:
+      notify_test:
+        description: "Send the notification even when the advice did not change"
+        type: boolean
+        default: false
   schedule:
     - cron: "30 5 * * *" # each morning (07:30 Belgian summer time): today's prices
     - cron: "30 15 * * 1-5" # weekdays, after FOD Economie publishes the next day's prices
@@ -29,19 +34,26 @@ jobs:
         run: curl -sSfL -A "fuelpricesbelgium" -o page.html "$(python -c 'from fuelprices.sources import fod; print(fod.URL)')"
       - name: Update the price history
         run: python -m fuelprices.update --db data/prices.sqlite --html page.html
+      - name: Backfill years of history when the file is new or short
+        run: |
+          if [ "$(sqlite3 data/prices.sqlite 'select count(*) from daily_prices where ulsd_usd_gal is not null')" -lt 1000 ]; then
+            python -m fuelprices.backfill --db data/prices.sqlite --since 2019-01-01
+          fi
+      - name: Fit the price rules to the history
+        run: fuelprices calibrate --db data/prices.sqlite --json data/calibration.json
       - name: Keep the previous advice for the notification
         run: if [ -f data/advice.json ]; then cp data/advice.json "$RUNNER_TEMP/advice-previous.json"; fi
       - name: Write the refuel advice
         run: fuelprices advise --db data/prices.sqlite --json data/advice.json
       - name: Commit the price history
         run: |
-          if git diff --quiet -- data/prices.sqlite && [ -z "$(git status --porcelain -- data/advice.json)" ]; then
+          if git diff --quiet -- data/prices.sqlite && [ -z "$(git status --porcelain -- data/advice.json data/calibration.json)" ]; then
             echo "No new prices."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/prices.sqlite data/advice.json
+          git add data/prices.sqlite data/advice.json data/calibration.json
           git commit -m "Update price history ($(date -u +%F))"
           # main may have moved while the job ran; replay this commit on top before pushing.
           git pull --rebase origin main
@@ -52,7 +64,8 @@ jobs:
         continue-on-error: true
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
-          NTFY_DAILY: ${{ vars.NTFY_DAILY }}
+          NTFY_DAILY: ${{ inputs.notify_test && '1' || vars.NTFY_DAILY }}
+          NTFY_LANGUAGES: ${{ vars.NTFY_LANGUAGES }}
         run: python -m fuelprices.notify --previous "$RUNNER_TEMP/advice-previous.json"
       - uses: actions/upload-artifact@v4
         if: failure()

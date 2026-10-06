@@ -4,22 +4,22 @@ The file is ``data/newsletter_predictions.csv``.
 
 The newsletter states the official maximum price valid today, the one published for the next
 change, and a forecast of the next price change. Only those numbers are stored, never newsletter
-text. This module loads the file, turns the stated prices into a daily series of maximum prices
-(used to backfill ``data/prices.sqlite``) and scores the forecasts against that series.
+text. This module loads the file and scores the forecasts against the official maximum prices in
+``data/prices.sqlite``. It can also check the prices the issues state against that history.
 
-Run ``python -m fuelprices.newsletter score`` or ``... backfill``.
+Run ``python -m fuelprices.newsletter score`` or ``... check``.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import sqlite3
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date
 from pathlib import Path
 
 from fuelprices import history
-from fuelprices.history import DailyPrices
 
 DEFAULT_PATH = Path("data/newsletter_predictions.csv")
 FUELS = ("diesel", "e10")
@@ -89,45 +89,29 @@ def load(path: Path = DEFAULT_PATH) -> list[Issue]:
     return sorted(issues, key=lambda i: i.day)
 
 
-def daily_max_prices(issues: list[Issue], fuel: str) -> dict[date, float]:
-    """Maximum price per day for days the newsletters pin down.
+def official_series(conn: sqlite3.Connection, fuel: str) -> dict[date, float]:
+    """Official max price per day from the history, for days that have one."""
+    column = f"{fuel}_max"
+    return {
+        r.day: getattr(r, column)
+        for r in history.all_rows(conn)
+        if getattr(r, column) is not None
+    }
 
-    A price stated for a day (today's, or the next one from its effective day) is a fixed
-    point. Between two fixed points the price is carried forward only when both agree; when
-    they differ the change day is unknown, so the days in between stay out.
-    """
-    points: dict[date, float] = {}
+
+def check(issues: list[Issue], official: dict[str, dict[date, float]]) -> list[tuple]:
+    """Stated max prices (today's, or the next one from its start day) that differ from history."""
+    off_by = []
     for issue in issues:
-        if issue.now[fuel] is not None:
-            points[issue.day] = issue.now[fuel] or 0.0
-        nxt = issue.next_price[fuel]
-        if nxt is not None and issue.next_effective is not None:
-            points.setdefault(issue.next_effective, nxt)
-    days = sorted(points)
-    series = dict(points)
-    for a, b in zip(days, days[1:], strict=False):
-        if points[a] == points[b]:
-            d = a + timedelta(days=1)
-            while d < b:
-                series[d] = points[a]
-                d += timedelta(days=1)
-    return series
-
-
-def backfill(conn, issues: list[Issue]) -> int:
-    """Write pinned-down max prices into the history for days that have none yet."""
-    diesel = daily_max_prices(issues, "diesel")
-    e10 = daily_max_prices(issues, "e10")
-    written = 0
-    for day in sorted(set(diesel) | set(e10)):
-        existing = history.get(conn, day)
-        d = None if existing and existing.diesel_max is not None else diesel.get(day)
-        e = None if existing and existing.e10_max is not None else e10.get(day)
-        if d is None and e is None:
-            continue
-        history.upsert(conn, DailyPrices(day=day, diesel_max=d, e10_max=e))
-        written += 1
-    return written
+        for fuel in FUELS:
+            stated = [(issue.day, issue.now[fuel])]
+            if issue.next_effective:
+                stated.append((issue.next_effective, issue.next_price[fuel]))
+            for day, price in stated:
+                known = official[fuel].get(day)
+                if price is not None and known is not None and abs(price - known) > 0.0006:
+                    off_by.append((issue.day, fuel, day, price, known))
+    return off_by
 
 
 @dataclass(frozen=True)
@@ -140,22 +124,21 @@ class Scored:
     correct: bool
 
 
-def score(issues: list[Issue]) -> list[Scored]:
+def score(issues: list[Issue], official: dict[str, dict[date, float]]) -> list[Scored]:
     """Score each real forecast: did the max price move that way by the last forecast day?
 
     A forecast of a change that the same newsletter already announced as the next max price
     (same fuel) is not a forecast and is skipped, as are forecasts without a day or without
     prices on both days.
     """
-    series = {f: daily_max_prices(issues, f) for f in FUELS}
     scored = []
     for issue in issues:
         for fuel in FUELS:
             fc = issue.forecast[fuel]
             if fc is None or fc.last_day is None or issue.next_price[fuel] is not None:
                 continue
-            start = series[fuel].get(issue.day)
-            end = series[fuel].get(fc.last_day)
+            start = official[fuel].get(issue.day)
+            end = official[fuel].get(fc.last_day)
             if start is None or end is None:
                 continue
             delta = round((end - start) * 100, 1)
@@ -190,16 +173,18 @@ def summarise(scored: list[Scored]) -> dict[str, str]:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="python -m fuelprices.newsletter")
-    parser.add_argument("command", choices=["score", "backfill"])
+    parser.add_argument("command", choices=["score", "check"])
     parser.add_argument("--csv", type=Path, default=DEFAULT_PATH)
     parser.add_argument("--db", type=Path, default=history.DEFAULT_DB_PATH)
     args = parser.parse_args(argv)
     issues = load(args.csv)
-    if args.command == "backfill":
-        conn = history.connect(args.db)
-        print(f"{backfill(conn, issues)} days written")
+    conn = history.connect(args.db)
+    official = {f: official_series(conn, f) for f in FUELS}
+    if args.command == "check":
+        for issue_day, fuel, day, stated, known in check(issues, official):
+            print(f"{issue_day} {fuel} {day}: newsletter {stated:.3f}, history {known:.3f}")
         return
-    scored = score(issues)
+    scored = score(issues, official)
     for label, text in summarise(scored).items():
         print(f"{label}: {text}")
     sized = [s for s in scored if s.size_ct is not None and s.correct]

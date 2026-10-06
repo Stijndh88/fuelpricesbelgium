@@ -85,11 +85,14 @@ def evaluate(
     base_cost: float,
     days_since_change: int,
     schedule: ThresholdSchedule = UNCONFIRMED_SCHEDULE,
+    recenter: str = "day",
 ) -> Decision:
     """Decide whether the maximum price of ``product`` changes after today's computation.
 
     ``product_costs`` are the daily product costs up to and including today, oldest first.
     ``base_cost`` is the product cost the current maximum price was computed from.
+    ``recenter`` says what the new base cost is after a change: that day's cost (``"day"``) or
+    the moving average (``"average"``); the technical annex is not published, so both are tried.
     """
     if not product_costs:
         raise ValueError("need at least today's product cost")
@@ -109,10 +112,11 @@ def evaluate(
         f"band ±{threshold:.2%}"
     )
 
+    new_base = moving_average if recenter == "average" else today
     if day_deviation > threshold and average_deviation > threshold:
-        return Decision(+1, today, f"up: {detail}")
+        return Decision(+1, new_base, f"up: {detail}")
     if day_deviation < -threshold and average_deviation < -threshold:
-        return Decision(-1, today, f"down: {detail}")
+        return Decision(-1, new_base, f"down: {detail}")
     return Decision(0, base_cost, f"no change: {detail}")
 
 
@@ -145,6 +149,7 @@ def simulate(
     product_costs: Sequence[float],
     initial_base_cost: float,
     schedule: ThresholdSchedule = UNCONFIRMED_SCHEDULE,
+    recenter: str = "day",
 ) -> list[Change]:
     """Replay the rules over a series of daily product costs and return the changes they cause.
 
@@ -162,7 +167,7 @@ def simulate(
         if not is_computation_day(day):
             continue
         seen.append(cost)
-        decision = evaluate(product, seen, base, days_since_change, schedule)
+        decision = evaluate(product, seen, base, days_since_change, schedule, recenter)
         if decision.changes:
             changes.append(
                 Change(

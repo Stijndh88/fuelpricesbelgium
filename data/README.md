@@ -6,13 +6,14 @@ morning by the "Daily price update" GitHub Action (`python -m fuelprices.update`
 | column | meaning | unit | source |
 |---|---|---|---|
 | `day` | date the prices are valid on | ISO date | |
-| `diesel_max` | official maximum price, diesel B7 | EUR/L incl. VAT | FOD Economie |
-| `e10_max` | official maximum price, petrol E10 (95) | EUR/L incl. VAT | FOD Economie |
+| `diesel_max` | official maximum price, diesel B7 | EUR/L incl. VAT | FOD Economie, petrolfed.be (daily series since 2011) |
+| `e10_max` | official maximum price, petrol E10 (95) | EUR/L incl. VAT | FOD Economie, petrolfed.be (daily series since 2011) |
 | `diesel_product` | wholesale product cost, diesel | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `e10_product` | wholesale product cost, petrol | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `brent_usd` | Brent crude, front-month ICE future daily close | USD per barrel | Yahoo Finance `BZ=F` (unofficial endpoint) |
 | `ulsd_usd_gal` | NYMEX ULSD (New York Harbor diesel) future, front month, daily close | USD per gallon | Yahoo Finance `HO=F` (unofficial endpoint) |
 | `rbob_usd_gal` | NYMEX RBOB gasoline future, front month, daily close | USD per gallon | Yahoo Finance `RB=F` (unofficial endpoint) |
+| `eur_usd` | EUR/USD exchange rate | USD per EUR | Yahoo Finance `EURUSD=X` (unofficial endpoint) |
 | `updated_at` | last time a value in the row changed | UTC timestamp | |
 
 Max prices stay in force until a new one is published, so days without a publication
@@ -31,4 +32,3 @@ the tariff valid from 7 October, so the price in force on 6 October was never fe
 `newsletter_predictions.csv` holds the max prices, product prices, crude price and forecasts
 stated in the Energieprijzen.vlaanderen newsletter (only numbers). Its columns and how well the
 forecasts did are in [../docs/newsletter-predictions.md](../docs/newsletter-predictions.md).
-The max prices it pins down were backfilled into `prices.sqlite` for 10 March to 5 October 2026.

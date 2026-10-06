@@ -13,70 +13,120 @@
       "price_today": 2.432,
       "price_tomorrow": 2.392,
       "next_possible_change": "2026-10-07",
-      "market_note": null
+      "market_note": null,
+      "reason_code": "wait_published",
+      "reason_params": {
+        "day": "2026-10-07",
+        "cents": 4.0,
+        "today": 2.432,
+        "tomorrow": 2.392
+      },
+      "market_note_params": null,
+      "is_guess": false
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Tomorrow's maximum price is published (2.065), but today's is not stored yet, so the two cannot be compared.",
-      "expected_change_cents": null,
-      "basis": "none",
-      "price_today": null,
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Gasoline futures -5.5% since 01/10: a drop is likely from Thu 08/10 or soon after.",
+      "expected_change_cents": -5.4,
+      "basis": "shock",
+      "price_today": 2.065,
       "price_tomorrow": 2.065,
-      "next_possible_change": "2026-10-07",
-      "market_note": null
+      "next_possible_change": "2026-10-08",
+      "market_note": "Big market move: Gasoline futures -5.5% since 01/10.",
+      "reason_code": "shock_wait",
+      "reason_params": {
+        "name": "Gasoline futures",
+        "pct": -5.5,
+        "since": "2026-10-01",
+        "when": "2026-10-08"
+      },
+      "market_note_params": {
+        "name": "Gasoline futures",
+        "pct": -5.5,
+        "since": "2026-10-01"
+      },
+      "is_guess": true
     }
   ],
+  "calibration": {
+    "diesel_b7": {
+      "trusted": false,
+      "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
+      "held_out_from": "2026-04-11",
+      "held_out_to": "2026-10-07",
+      "real_changes": 38,
+      "precision": 0.65,
+      "recall": 0.39
+    },
+    "e10": {
+      "trusted": false,
+      "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
+      "held_out_from": "2026-04-11",
+      "held_out_to": "2026-10-07",
+      "real_changes": 26,
+      "precision": 0.41,
+      "recall": 0.27
+    }
+  },
   "caveats": [
     "The wholesale diesel and petrol quotations that actually trigger a change are not free, so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
-    "The band widths of the price rules are placeholders until calibrated on the history.",
+    "The exact band widths of the price rules are not public. They are fitted to the real price history; until the fit reproduces the real changes well enough on days it was not fitted on, predictions beyond tomorrow's published price are labelled a guess.",
     "Brent and US futures are converted at a fixed EUR/USD rate. The diesel and gasoline futures are New York contracts, a stand-in for the Rotterdam quotations Belgium uses.",
     "The market shock flag looks at prices, not news: news only counts once markets move.",
     "Belgian public holidays and government price freezes are not taken into account.",
     "Pump prices can be below the official maximum; the advice is about the maximum price."
   ],
+  "caveat_codes": [
+    "wholesale_proxy",
+    "bands_fit",
+    "fx_fixed",
+    "shock_prices_only",
+    "holidays_ignored",
+    "pump_below_max"
+  ],
   "backtest": [
     {
       "product": "diesel_b7",
       "shock_threshold": null,
-      "windows": 0,
-      "saved": 0,
-      "same": 0,
-      "lost": 0,
-      "avg_saving_cents": null,
-      "note": "Not enough history yet: needs 7 consecutive days with a price."
+      "windows": 360,
+      "saved": 225,
+      "same": 75,
+      "lost": 60,
+      "avg_saving_cents": 1.68,
+      "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "diesel_b7",
       "shock_threshold": 0.05,
-      "windows": 0,
-      "saved": 0,
-      "same": 0,
-      "lost": 0,
-      "avg_saving_cents": null,
-      "note": "Not enough history yet: needs 7 consecutive days with a price."
+      "windows": 360,
+      "saved": 239,
+      "same": 75,
+      "lost": 46,
+      "avg_saving_cents": 2.04,
+      "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "e10",
       "shock_threshold": null,
-      "windows": 0,
-      "saved": 0,
-      "same": 0,
-      "lost": 0,
-      "avg_saving_cents": null,
-      "note": "Not enough history yet: needs 7 consecutive days with a price."
+      "windows": 360,
+      "saved": 189,
+      "same": 138,
+      "lost": 33,
+      "avg_saving_cents": 1.03,
+      "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "e10",
       "shock_threshold": 0.05,
-      "windows": 0,
-      "saved": 0,
-      "same": 0,
-      "lost": 0,
-      "avg_saving_cents": null,
-      "note": "Not enough history yet: needs 7 consecutive days with a price."
+      "windows": 360,
+      "saved": 193,
+      "same": 138,
+      "lost": 29,
+      "avg_saving_cents": 1.15,
+      "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
 }
