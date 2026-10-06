@@ -116,6 +116,12 @@ def _price(rows: dict[date, DailyPrices], day: date, column: str) -> float | Non
     return getattr(row, column) if row else None
 
 
+def _price_in_force(rows: dict[date, DailyPrices], day: date, column: str) -> float | None:
+    """The max price valid on ``day``: it stays in force until a new one is published."""
+    known = [d for d, r in rows.items() if d <= day and getattr(r, column) is not None]
+    return getattr(rows[max(known)], column) if known else None
+
+
 def _last_change(rows: dict[date, DailyPrices], today: date, column: str) -> date | None:
     """The most recent day up to ``today`` on which the max price differed from the day before."""
     known = sorted(d for d, r in rows.items() if d <= today and getattr(r, column) is not None)
@@ -211,7 +217,7 @@ def advise(
     column = ADVISED_PRODUCTS[product]
     by_day = {r.day: r for r in rows if r.day <= today + timedelta(days=1)}
     tomorrow = today + timedelta(days=1)
-    price_today = _price(by_day, today, column)
+    price_today = _price_in_force(by_day, today, column)
     price_tomorrow = _price(by_day, tomorrow, column)
     next_change = next_possible_change(today)
     big_move = None
@@ -233,19 +239,33 @@ def advise(
         )
 
     if price_today is None:
-        return make(NO_DIFFERENCE, "No maximum price known for today.", None, "none")
+        if price_tomorrow is not None:
+            reason = (
+                f"Tomorrow's maximum price is published ({price_tomorrow:.3f}), but today's is "
+                "not stored yet, so the two cannot be compared."
+            )
+        else:
+            reason = "No maximum price known for today."
+        return make(NO_DIFFERENCE, reason, None, "none")
 
     if price_tomorrow is not None:
         change = price_tomorrow - price_today
         cents = f"{abs(change) * 100:.1f} cent/L"
+        both = f"{price_today:.3f} to {price_tomorrow:.3f}"
+        day_name = f"{tomorrow:%a %d/%m}"
         if change <= -MIN_CHANGE_EUR:
             return make(
-                WAIT, f"The maximum price drops {cents} tomorrow (published).", change, "published"
+                WAIT,
+                f"Wait until tomorrow ({day_name}): the maximum price drops {cents}, "
+                f"{both} (published).",
+                change,
+                "published",
             )
         if change >= MIN_CHANGE_EUR:
             return make(
                 FILL_UP,
-                f"The maximum price rises {cents} tomorrow (published).",
+                f"Fill up today: the maximum price rises {cents} tomorrow ({day_name}), "
+                f"{both} (published).",
                 change,
                 "published",
             )
