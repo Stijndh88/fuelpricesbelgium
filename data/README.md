@@ -8,8 +8,8 @@ morning by the "Daily price update" GitHub Action (`python -m fuelprices.update`
 | `day` | date the prices are valid on | ISO date | |
 | `diesel_max` | official maximum price, diesel B7 | EUR/L incl. VAT | FOD Economie |
 | `e10_max` | official maximum price, petrol E10 (95) | EUR/L incl. VAT | FOD Economie |
-| `diesel_product` | wholesale product price, diesel | EUR per 1000 L | not sourced yet |
-| `e10_product` | wholesale product price, petrol | EUR per 1000 L | not sourced yet |
+| `diesel_product` | wholesale product cost, diesel | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
+| `e10_product` | wholesale product cost, petrol | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `brent_usd` | Brent crude spot | USD per barrel | FRED `DCOILBRENTEU` (EIA), lags a few working days |
 | `updated_at` | last time a value in the row changed | UTC timestamp | |
 

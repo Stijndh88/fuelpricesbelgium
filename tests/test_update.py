@@ -10,7 +10,7 @@ from fuelprices.products import Product
 
 TODAY = date(2026, 10, 6)
 TOMORROW = TODAY + timedelta(days=1)
-FIXTURE = Path(__file__).parent / "fixtures" / "fod_sample.html"
+FIXTURE = Path(__file__).parent / "fixtures" / "petrolprices_nl.html"
 
 
 @pytest.fixture
@@ -24,7 +24,7 @@ def official():
     return [
         PriceRecord(TODAY, Product.DIESEL_B7, 2.432, "test"),
         PriceRecord(TODAY, Product.E10, 2.065, "test"),
-        PriceRecord(TODAY, Product.LPG, 0.861, "test"),
+        PriceRecord(TODAY, Product.E5_98, 2.259, "test"),
         PriceRecord(TOMORROW, Product.DIESEL_B7, 2.392, "test"),
     ]
 
@@ -78,8 +78,8 @@ def test_one_failing_source_keeps_the_other(conn):
 
 
 def test_no_diesel_or_e10_counts_as_failure(conn):
-    lpg_only = [PriceRecord(TODAY, Product.LPG, 0.861, "test")]
-    assert update.run(conn, TODAY, fetch_max=lambda: lpg_only, fetch_brent=brent) == ["max_prices"]
+    e5_only = [PriceRecord(TODAY, Product.E5_98, 2.259, "test")]
+    assert update.run(conn, TODAY, fetch_max=lambda: e5_only, fetch_brent=brent) == ["max_prices"]
 
 
 def test_main_with_saved_page(tmp_path, monkeypatch):

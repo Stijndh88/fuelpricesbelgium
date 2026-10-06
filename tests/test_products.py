@@ -7,12 +7,13 @@ from fuelprices.products import ChangeRule, Product, match_product
     ("name", "expected"),
     [
         ("Essence 95 RON E10", Product.E10),
-        ("Benzine 95 RON - E10", Product.E10),
+        ("Benzine 95 RON E10", Product.E10),
         ("Essence 98 RON E5", Product.E5_98),
         ("Diesel B7", Product.DIESEL_B7),
-        ("Gasoil diesel - B10", Product.DIESEL_B10),
-        ("LPG (Autogas)", Product.LPG),
-        ("Gasolie verwarming 50S (< 2000 l)", Product.HEATING_OIL),
+        ("Gasolie verwarming (H0/H7) (vanaf 2000 l)", Product.HEATING_OIL),
+        ("Gasoil chauffage (H0/H7) (à partir de 2000 l)", Product.HEATING_OIL),
+        ("Gasolie verwarming (H0/H7) (minder dan 2000 l)", Product.HEATING_OIL_SMALL),
+        ("Gasoil chauffage (H0/H7) (moins de 2000 l)", Product.HEATING_OIL_SMALL),
         ("Pétrole lampant", None),
     ],
 )

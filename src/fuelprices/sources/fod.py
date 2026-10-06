@@ -1,9 +1,12 @@
 """Official maximum prices published daily by FOD Economie (Algemene Directie Energie).
 
-The page lists every product with its maximum price in EUR per litre (VAT included) and
-the date from which it applies. Rather than depending on the exact page layout, the parser
-walks every HTML table row, keeps rows whose first cell names a tracked product, and takes
-the first EUR-per-litre looking number on that row.
+The prices are served by a small table app (embedded in the "Tarif officiel des produits
+pétroliers" page on economie.fgov.be) that lists each product with its maximum price in EUR
+per litre, VAT included, under the date from which the tariff applies.
+
+Rather than depending on the exact page layout, the parser walks every HTML table row, keeps
+rows whose first cell names a tracked product, and takes the first EUR-per-litre looking number
+on that row.
 """
 
 from __future__ import annotations
@@ -17,10 +20,7 @@ from fuelprices.models import PriceRecord
 from fuelprices.products import match_product
 
 SOURCE = "fod-economie"
-URL = (
-    "https://economie.fgov.be/fr/themes/energie/prix-de-lenergie/"
-    "prix-maximum-des-produits/tarif-officiel-des-produits"
-)
+URL = "https://petrolprices.economie.fgov.be/petrolprices?locale=nl"
 USER_AGENT = "fuelpricesbelgium (+https://github.com/Stijndh88/fuelpricesbelgium)"
 
 # 2,0650 / 2.065 / 2,065 € — a plausible pump price in EUR per litre.
