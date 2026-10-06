@@ -21,7 +21,9 @@ URL = "https://petrolfed.be/nl/dms_maximumprijs_export/all/{start}/{end}"
 USER_AGENT = "fuelpricesbelgium (+https://github.com/Stijndh88/fuelpricesbelgium)"
 
 # taxonomy_tid of the products we track in the JSON series.
-PRODUCT_TIDS = {"31": Product.DIESEL_B7, "28": Product.E10}
+# Heating oil (H0/H7, 2000 L and up) has no band: its max price follows the product cost of the
+# day, which makes it the official daily gasoil cost the diesel rules are fitted on.
+PRODUCT_TIDS = {"31": Product.DIESEL_B7, "28": Product.E10, "75": Product.HEATING_OIL}
 
 
 def parse(text: str) -> dict[Product, dict[date, float]]:
@@ -55,5 +57,7 @@ def fetch(start: date, end: date, timeout: float = 60) -> dict[Product, dict[dat
     with urllib.request.urlopen(request, timeout=timeout) as response:
         series = parse(response.read().decode("utf-8"))
     if not series:
-        raise ValueError("no diesel or E10 series in the petrolfed export; has the format changed?")
+        raise ValueError(
+            "no diesel, E10 or heating oil series in the petrolfed export; has the format changed?"
+        )
     return series

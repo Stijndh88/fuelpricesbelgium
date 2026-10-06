@@ -36,7 +36,7 @@ jobs:
         run: python -m fuelprices.update --db data/prices.sqlite --html page.html
       - name: Backfill years of history when the file is new or short
         run: |
-          if [ "$(sqlite3 data/prices.sqlite 'select count(*) from daily_prices where ulsd_usd_gal is not null')" -lt 1000 ]; then
+          if [ "$(sqlite3 data/prices.sqlite 'select count(*) from daily_prices where heating_oil_max is not null')" -lt 1000 ]; then
             python -m fuelprices.backfill --db data/prices.sqlite --since 2019-01-01
           fi
       - name: Fit the price rules to the history

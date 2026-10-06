@@ -29,6 +29,15 @@ SERIES_COLUMNS = {
     Product.E10: ("e10_max", "rbob_usd_gal"),
 }
 
+STAND_IN = "New York futures stand-in"
+OFFICIAL_COST = "official gasoil cost (heating oil max price)"
+# Heating oil has no band, so its max price follows the same gasoil cost the diesel rules use. It
+# needs this many days of history before it replaces the stand-in.
+MIN_OFFICIAL_DAYS = 500
+# A price applying from day D+1 was computed on day D; the New York settlement of day D-1 is what
+# the Rotterdam quotation of day D follows (measured: daily changes correlate 0.7 at that lag).
+HEATING_VAT = 1 + rules.VAT_RATE
+
 # A predicted change counts as the real one when it applies within this many days of it.
 MATCH_WINDOW_DAYS = 1
 # Replay changes before this many days from the start of the series are not scored: the replay
@@ -51,6 +60,7 @@ class Series:
     days: tuple[date, ...]  # days with a product cost
     costs: tuple[float, ...]
     prices: dict[date, float]  # real max price for every calendar day known
+    cost_source: str = STAND_IN  # where the costs come from
 
 
 @dataclass(frozen=True)
@@ -101,11 +111,52 @@ class Score:
         return self.hits + self.misses
 
 
+def official_costs(rows: Sequence[DailyPrices]) -> tuple[list[date], list[float]] | None:
+    """The daily gasoil cost implied by the official heating oil max price, EUR/L excl. VAT.
+
+    The price valid on day D+1 is computed on working day D, so day D gets the price of D+1. The
+    level (margin, duties and contributions) is not published; it is taken from the median gap
+    with the New York future over the last two years. The band is a percentage of the cost, so an
+    error of a cent in that level does not matter.
+    """
+    heating = {r.day: r.heating_oil_max for r in rows if r.heating_oil_max is not None}
+    if len(heating) < MIN_OFFICIAL_DAYS:
+        return None
+    proxy = {}
+    for row in rows:
+        if row.ulsd_usd_gal is not None and row.eur_usd:
+            proxy[row.day] = row.ulsd_usd_gal / LITRES_PER_GALLON / row.eur_usd
+    recent = max(heating) - timedelta(days=730)
+    gaps = [
+        heating[d + timedelta(days=2)] / HEATING_VAT - cost
+        for d, cost in proxy.items()
+        if d >= recent and d + timedelta(days=2) in heating
+    ]
+    if len(gaps) < 100:
+        return None
+    level = statistics.median(gaps)
+    days = [
+        d
+        for d in sorted(heating)
+        if rules.is_computation_day(d) and d + timedelta(days=1) in heating
+    ]
+    return days, [heating[d + timedelta(days=1)] / HEATING_VAT - level for d in days]
+
+
 def build_series(rows: Iterable[DailyPrices], product: Product) -> Series:
-    """The stand-in cost and real max price series of ``product`` from the stored history."""
+    """The product cost and real max price series of ``product`` from the stored history.
+
+    Diesel uses the official gasoil cost when the history has it, everything else the New York
+    future converted to EUR/L.
+    """
+    rows = sorted(rows, key=lambda r: r.day)
     price_col, proxy_col = SERIES_COLUMNS[product]
+    prices = {r.day: getattr(r, price_col) for r in rows if getattr(r, price_col) is not None}
+    if product is Product.DIESEL_B7 and (official := official_costs(rows)):
+        days, costs = official
+        return Series(tuple(days), tuple(costs), prices, OFFICIAL_COST)
     days, costs, prices = [], [], {}
-    for row in sorted(rows, key=lambda r: r.day):
+    for row in rows:
         price = getattr(row, price_col)
         if price is not None:
             prices[row.day] = price
@@ -113,7 +164,7 @@ def build_series(rows: Iterable[DailyPrices], product: Product) -> Series:
         if proxy is not None and row.eur_usd:
             days.append(row.day)
             costs.append(proxy / LITRES_PER_GALLON / row.eur_usd)
-    return Series(tuple(days), tuple(costs), prices)
+    return Series(tuple(days), tuple(costs), prices, STAND_IN)
 
 
 def real_changes(prices: dict[date, float]) -> list[RealChange]:
@@ -207,6 +258,7 @@ class Calibration:
     pass_through: float | None  # real max price change per EUR of stand-in cost change, incl. VAT
     trusted: bool
     note: str
+    cost_source: str | None = None
 
 
 def is_trusted(test: Score | None) -> bool:
@@ -255,6 +307,7 @@ def calibrate_product(
         return Calibration(
             name, None, None, None, None, None, None, None, None, False,
             "Not enough history with product costs and max prices to fit the rules.",
+            series.cost_source,
         )  # fmt: skip
     first = series.days[0] + timedelta(days=WARMUP_DAYS)
     last = max(series.prices)
@@ -288,6 +341,7 @@ def calibrate_product(
         pass_through(replayed, actual, series),
         trusted,
         note,
+        series.cost_source,
     )
 
 
@@ -399,6 +453,8 @@ def report(calibrations: dict[str, Calibration]) -> str:
         if c.params is None:
             continue
         p = c.params
+        if c.cost_source:
+            lines.append(f"  product cost: {c.cost_source}")
         lines.append(
             f"  band {p.start:.1%} narrowing to {p.end:.1%} over {SCHEDULE_DAYS} days, "
             f"cost lag {p.lag}, new base = {p.recenter}"

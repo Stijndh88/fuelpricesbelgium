@@ -26,7 +26,11 @@ BRENT_LOOKBACK_DAYS = 14
 MAX_PRICE_LOOKBACK_DAYS = 14
 
 # Which history column each tracked product's official max price goes into.
-MAX_PRICE_COLUMNS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
+MAX_PRICE_COLUMNS = {
+    Product.DIESEL_B7: "diesel_max",
+    Product.E10: "e10_max",
+    Product.HEATING_OIL: "heating_oil_max",
+}
 
 MaxPriceFetcher = Callable[[], Iterable[PriceRecord]]
 DailyMaxFetcher = Callable[[date], Iterable[PriceRecord]]

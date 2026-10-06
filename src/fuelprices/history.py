@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     day            TEXT PRIMARY KEY,  -- ISO date the prices are valid on
     diesel_max     REAL,              -- official max price diesel B7, EUR/L incl. VAT
     e10_max        REAL,              -- official max price petrol E10 (95), EUR/L incl. VAT
+    heating_oil_max REAL,             -- official max price heating oil (2000 L+), EUR/L incl. VAT
     diesel_product REAL,              -- wholesale product cost diesel, EUR/L (rules input)
     e10_product    REAL,              -- wholesale product cost petrol, EUR/L (rules input)
     brent_usd      REAL,              -- Brent crude front-month future close, USD per barrel
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS daily_prices (
 VALUE_COLUMNS = (
     "diesel_max",
     "e10_max",
+    "heating_oil_max",
     "diesel_product",
     "e10_product",
     "brent_usd",
@@ -47,6 +49,7 @@ class DailyPrices:
     day: date
     diesel_max: float | None = None
     e10_max: float | None = None
+    heating_oil_max: float | None = None
     diesel_product: float | None = None
     e10_product: float | None = None
     brent_usd: float | None = None
