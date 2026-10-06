@@ -1,0 +1,23 @@
+name: Temporary probe
+on: push
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          probe() { echo "== $1"; curl -sS -L -m 30 -A "fuelpricesbelgium" -o /tmp/out -w "HTTP %{http_code} %{content_type} %{size_download}B\n" "$1" || true; head -c "${2:-400}" /tmp/out | tr '\n' ' '; echo; }
+          probe "https://petrolprices.economie.fgov.be/petrolprices?locale=nl" 200
+          grep -o -i 'href="[^"]*"\|<option[^>]*>\|<input[^>]*>\|name="[^"]*"' /tmp/out | head -40
+          probe "https://petrolfed.be/en/maximum-prices" 300
+          grep -o -i 'href="[^"]*\(xls\|csv\|json\|download\|price\)[^"]*"' /tmp/out | head -20
+          probe "https://petrolfed.be/nl/maximumprijzen" 300
+          grep -o -i 'href="[^"]*\(xls\|csv\|json\|download\|prijs\)[^"]*"' /tmp/out | head -20
+          probe "https://statbel.fgov.be/en/themes/energy" 200
+          grep -o -i 'href="[^"]*\(petrol\|fuel\|diesel\|price\)[^"]*"' /tmp/out | head -20
+          probe "https://web.archive.org/cdx/search/cdx?url=petrolprices.economie.fgov.be/*&output=txt&fl=timestamp,original,statuscode&collapse=timestamp:8&limit=40" 3000
+          probe "https://web.archive.org/cdx/search/cdx?url=petrolprices.economie.fgov.be/*&output=txt&fl=timestamp&collapse=timestamp:8&limit=2000" 100
+          wc -l /tmp/out
+          probe "https://economie.fgov.be/nl/themas/energie/prijzen-en-tarieven/aardolieproducten/maximumprijzen" 300
+          grep -o -i 'href="[^"]*\(xls\|csv\|json\|download\|historiek\|petrolprices\)[^"]*"' /tmp/out | head -20
+          probe "https://query1.finance.yahoo.com/v8/finance/chart/HO%3DF?range=5y&interval=1d" 100
+          python3 -c "import json;d=json.load(open('/tmp/out'));print(len(d['chart']['result'][0]['timestamp']))"
