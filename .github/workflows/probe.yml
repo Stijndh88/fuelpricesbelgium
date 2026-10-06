@@ -2,47 +2,17 @@ name: Temporary source probe
 on:
   push:
     branches: [claude/project-thread-c0e3qu]
-    paths: [".github/workflows/probe.yml"]
+    paths: [".github/workflows/probe.yml", ".github/probe_heat.py"]
 permissions:
   contents: read
 jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: Probe candidate Rotterdam price sources (read-only, prints to the log)
-        run: |
-          python3 - <<'PY'
-          import re, urllib.request, ssl
-          UA = {"User-Agent": "Mozilla/5.0 (fuelpricesbelgium probe)"}
-          def get(url, n=300000):
-              try:
-                  req = urllib.request.Request(url, headers=UA)
-                  with urllib.request.urlopen(req, timeout=25) as r:
-                      body = r.read(n).decode("utf-8", "replace")
-                      return r.status, r.headers.get("content-type", ""), body
-              except Exception as e:
-                  return getattr(e, "code", "ERR"), str(e)[:80], ""
-          import json
-          s, ct, body = get("https://petrolfed.be/nl/dms_maximumprijs_export/all/2026-10-01/2026-10-07")
-          print("== petrolfed all", s, len(body))
-          try:
-              for ser in json.loads(body):
-                  print("   tid", ser.get("taxonomy_tid"), ser.get("titel"), list(ser.get("data", {}).items())[-1:])
-          except Exception as e:
-              print("   not json", e, body[:200])
-          for u in [
-            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getContractsAsJson=&productId=34&hubId=403",
-            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getContractsAsJson=&productId=34&hubId=403&marketId=",
-            "https://www.ice.com/marketdata/api/productguide/charting/data/historical?marketId=5469054&historicalSpan=3",
-            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getHistoricalChartDataAsJson=&marketId=5469054&historicalSpan=3",
-            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getIntradayChartDataAsJson=&marketId=5469054",
-            "https://www.cnbc.com/quotes/@LGO.1",
-            "https://www.marketwatch.com/investing/future/lgo00",
-            "https://query1.finance.yahoo.com/v1/finance/search?q=gasoil&quotesCount=15",
-            "https://query1.finance.yahoo.com/v1/finance/search?q=eurobob&quotesCount=15",
-            "https://query1.finance.yahoo.com/v1/finance/search?q=ICE%20low%20sulphur%20gasoil&quotesCount=15",
-          ]:
-              s, ct, body = get(u)
-              print("==", s, ct[:40], len(body), u)
-              print("   ", " ".join(body[:600].split()))
-          PY
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e .
+      - name: Heating oil max price as a daily gasoil cost (read-only, prints to the log)
+        run: python .github/probe_heat.py
