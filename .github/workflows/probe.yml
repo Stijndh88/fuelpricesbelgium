@@ -22,37 +22,27 @@ jobs:
                       return r.status, r.headers.get("content-type", ""), body
               except Exception as e:
                   return getattr(e, "code", "ERR"), str(e)[:80], ""
-          pages = [
-            "https://petrolfed.be/nl/maximumprijzen/evolutie",
-            "https://petrolfed.be/nl/maximumprijzen",
-            "https://petrolfed.be/nl/brandstofprijzen",
-            "https://petrolfed.be/nl/node/1",
-            "https://carbu.com/belgie/index.php/r/prijsberekening-brandstoffen-waarom-het-belgisch-model-zonder-meer-goed-is/1493361677803",
-            "https://carbu.com/belgie/index.php/diesel",
-            "https://www.ice.com/marketdata/reports/10",
-            "https://www.ice.com/products/27996665/Low-Sulphur-Gasoil-Futures/data?marketId=5469054",
-            "https://stooq.com/q/d/l/?s=lgo.f&i=d",
-            "https://stooq.com/q/d/l/?s=lf.f&i=d",
-            "https://www.barchart.com/futures/quotes/QS*0/overview",
-            "https://economie.fgov.be/nl/themas/energie/prijzen-en-tarieven/petroleumproducten",
-            "https://www.en2x.de/service/statistiken/preise/",
-            "https://ufip.fr/cotations",
-            "https://oil.fgov.be",
-            "https://ec.europa.eu/energy/observatory/reports/Oil_Bulletin_Prices_History.xlsx",
-            "https://energy.ec.europa.eu/document/download/264c2d0f-f161-4ea3-a777-78faae59bea0_en?filename=Weekly_Oil_Bulletin_Prices_History_maticni_4web.xlsx",
-          ]
-          for u in pages:
+          import json
+          s, ct, body = get("https://petrolfed.be/nl/dms_maximumprijs_export/all/2026-10-01/2026-10-07")
+          print("== petrolfed all", s, len(body))
+          try:
+              for ser in json.loads(body):
+                  print("   tid", ser.get("taxonomy_tid"), ser.get("titel"), list(ser.get("data", {}).items())[-1:])
+          except Exception as e:
+              print("   not json", e, body[:200])
+          for u in [
+            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getContractsAsJson=&productId=34&hubId=403",
+            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getContractsAsJson=&productId=34&hubId=403&marketId=",
+            "https://www.ice.com/marketdata/api/productguide/charting/data/historical?marketId=5469054&historicalSpan=3",
+            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getHistoricalChartDataAsJson=&marketId=5469054&historicalSpan=3",
+            "https://www.ice.com/marketdata/DelayedMarkets.shtml?getIntradayChartDataAsJson=&marketId=5469054",
+            "https://www.cnbc.com/quotes/@LGO.1",
+            "https://www.marketwatch.com/investing/future/lgo00",
+            "https://query1.finance.yahoo.com/v1/finance/search?q=gasoil&quotesCount=15",
+            "https://query1.finance.yahoo.com/v1/finance/search?q=eurobob&quotesCount=15",
+            "https://query1.finance.yahoo.com/v1/finance/search?q=ICE%20low%20sulphur%20gasoil&quotesCount=15",
+          ]:
               s, ct, body = get(u)
               print("==", s, ct[:40], len(body), u)
-              if body and "html" in ct:
-                  links = set(re.findall(r'href="([^"]+)"', body))
-                  keys = ("export", "csv", "xls", "json", "platts", "rotterdam", "notering", "quotation", "dms_", "download", "chart", "data")
-                  for l in sorted(links):
-                      if any(k in l.lower() for k in keys):
-                          print("   link", l[:140])
-                  for m in set(re.findall(r'[^<>"\s]*(?:Platts|Rotterdam|ARA|CIF)[^<>"]{0,80}', body))[:0] if False else []:
-                      pass
-                  hits = re.findall(r'(?i).{0,60}(?:platts|rotterdam|cif nwe|eurobob).{0,60}', re.sub(r"<[^>]+>", " ", body))
-                  for h in hits[:6]:
-                      print("   text:", " ".join(h.split()))
+              print("   ", " ".join(body[:600].split()))
           PY
