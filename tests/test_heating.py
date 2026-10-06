@@ -171,6 +171,7 @@ def run_cli(monkeypatch, capsys, extra=()):
 def test_report_hides_private_values_when_env_is_used(monkeypatch, capsys):
     out = run_cli(monkeypatch, capsys)
     assert "| day | mean temp °C | cheaper |" in out
+    assert "capacity tariff included" in out
     for private in ("0.0987", "0.2876", "23456", "51.2345", "4.4321", "87%", "EUR", "kWh", "COP"):
         assert private not in out
 
@@ -179,3 +180,42 @@ def test_show_private_prints_the_full_report(monkeypatch, capsys):
     out = run_cli(monkeypatch, capsys, ["--show-private"])
     assert "0.0987" in out and "your own prices (environment)" in out
     assert "heat pump EUR" in out
+    assert "Net saving over a year" in out and "Capacity tariff" in out
+
+
+def make_system():
+    return model.HeatPumpSystem(
+        (
+            model.HeatPumpUnit("a", heating_kw=4.2, heating_kw_at_minus10=2.7, scop=4.6),
+            model.HeatPumpUnit("b", heating_kw=8.0, heating_kw_at_minus10=5.14, scop=4.32),
+        )
+    )
+
+
+def test_annual_estimate_adds_up():
+    curve = model.scaled_to_scop(model.CopCurve(), 4.4)
+    year = model.annual_estimate(4000, PRICES, curve, make_system(), 0.9, 50.0)
+    assert year.gas_only_eur == pytest.approx(4000 * 0.10 / 0.9)
+    # All heat comes from the heat pumps (the house is small), so no gas is left over.
+    assert year.electricity_kwh == pytest.approx(4000 / 4.4, rel=0.15)
+    assert year.heat_pump_eur == pytest.approx(year.electricity_kwh * 0.30)
+    assert year.capacity_eur == pytest.approx(year.capacity_extra_kw * 50.0)
+    assert year.net_saving_eur == pytest.approx(
+        year.gas_only_eur - year.heat_pump_eur - year.capacity_eur
+    )
+    assert 0 < year.capacity_extra_kw < year.capacity_extra_kw_max
+    assert year.net_saving_worst_eur < year.net_saving_eur
+
+
+def test_annual_estimate_gas_tops_up_when_the_house_needs_more_than_the_heat_pumps_give():
+    curve = model.CopCurve(((-15.0, 2.0), (20.0, 4.0)))
+    small = model.HeatPumpSystem((model.HeatPumpUnit("a", 1.0, 0.5, 4.0),))
+    year = model.annual_estimate(20000, PRICES, curve, small, 0.9, 0.0)
+    assert year.heat_pump_eur > year.electricity_kwh * 0.30  # gas bought on top
+    assert year.capacity_eur == 0
+
+
+def test_capacity_tariff_can_come_from_the_environment():
+    settings = config.with_env(config.load(), {"HEATING_CAPACITY_EUR_PER_KW_YEAR": "53,13"})
+    assert settings.capacity_eur_per_kw_year == pytest.approx(53.13)
+    assert config.Settings().capacity_eur_per_kw_year == 55.0

@@ -29,12 +29,18 @@ class Settings:
     hot_water_share: float = 0.15
     base_temp: float = 16.5
     degree_days: float = 2400
+    capacity_eur_per_kw_year: float = 55.0
     cop_curve: CopCurve = CopCurve(DEFAULT_COP_CURVE)
     heat_pumps: HeatPumpSystem = HeatPumpSystem()
 
     @property
     def capacity_known(self) -> bool:
         return bool(self.heat_pumps.units)
+
+    @property
+    def annual_heat_kwh(self) -> float:
+        """Heat the house needs in a normal year, from the gas use on the bill."""
+        return self.annual_gas_kwh * (1 - self.hot_water_share) * self.boiler_efficiency
 
     @property
     def loss_kwh_per_degree_day(self) -> float:
@@ -76,6 +82,9 @@ def load(path: str | Path = DEFAULT_CONFIG_PATH) -> Settings:
         hot_water_share=house.get("hot_water_share", defaults.hot_water_share),
         base_temp=house.get("base_temp", defaults.base_temp),
         degree_days=house.get("degree_days", defaults.degree_days),
+        capacity_eur_per_kw_year=raw.get("electricity", {}).get(
+            "capacity_eur_per_kw_year", defaults.capacity_eur_per_kw_year
+        ),
         cop_curve=cop_curve,
         heat_pumps=units,
     )
@@ -90,6 +99,7 @@ ENV_ELECTRICITY_PRICE = "HEATING_ELECTRICITY_EUR_PER_KWH"
 ENV_ANNUAL_GAS_KWH = "HEATING_ANNUAL_GAS_KWH"
 ENV_BOILER_EFFICIENCY = "HEATING_BOILER_EFFICIENCY"
 ENV_HOT_WATER_SHARE = "HEATING_HOT_WATER_SHARE"
+ENV_CAPACITY_TARIFF = "HEATING_CAPACITY_EUR_PER_KW_YEAR"
 PRIVATE_ENV_VARS = (
     ENV_LATITUDE,
     ENV_LONGITUDE,
@@ -98,6 +108,7 @@ PRIVATE_ENV_VARS = (
     ENV_ANNUAL_GAS_KWH,
     ENV_BOILER_EFFICIENCY,
     ENV_HOT_WATER_SHARE,
+    ENV_CAPACITY_TARIFF,
 )
 
 
@@ -124,5 +135,6 @@ def with_env(settings: Settings, env: Mapping[str, str] | None = None) -> Settin
         "annual_gas_kwh": env_value(ENV_ANNUAL_GAS_KWH, env),
         "boiler_efficiency": env_value(ENV_BOILER_EFFICIENCY, env),
         "hot_water_share": env_value(ENV_HOT_WATER_SHARE, env),
+        "capacity_eur_per_kw_year": env_value(ENV_CAPACITY_TARIFF, env),
     }
     return replace(settings, **{k: v for k, v in overrides.items() if v is not None})

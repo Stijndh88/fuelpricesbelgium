@@ -16,6 +16,17 @@ from pathlib import Path
 from heating import config, model, tariffs, weather
 
 
+def yearly_estimate(settings: config.Settings, prices: model.Prices) -> model.AnnualEstimate:
+    return model.annual_estimate(
+        settings.annual_heat_kwh,
+        prices,
+        settings.cop_curve,
+        settings.heat_pumps,
+        settings.boiler_efficiency,
+        settings.capacity_eur_per_kw_year,
+    )
+
+
 def private_report(
     settings: config.Settings,
     tariff: tariffs.Tariff,
@@ -48,6 +59,19 @@ def private_report(
         "",
         f"- With your prices and your units, {verdict}.",
     ]
+    if settings.capacity_known:
+        year = yearly_estimate(settings, prices)
+        outcome = (
+            "cheaper"
+            if year.net_saving_worst_eur > 0
+            else "cheaper or more expensive, depending on your peaks,"
+            if year.net_saving_eur > 0
+            else "more expensive"
+        )
+        lines.append(
+            "- Over a normal year, with the capacity tariff included, heating with the heat "
+            f"pumps first comes out **{outcome}** than gas."
+        )
     days = sorted(d for d in temps if d >= today)
     if days:
         lines += ["", "| day | mean temp °C | cheaper |", "|---|---:|---|"]
@@ -136,6 +160,24 @@ def report(
             "",
             f"Over these {len(days)} days: all gas {total_gas:.2f} EUR, heat pump first "
             f"{total_hp:.2f} EUR, switching each day to the cheaper one {total_best:.2f} EUR.",
+        ]
+    if settings.capacity_known:
+        year = yearly_estimate(settings, prices)
+        lines += [
+            "",
+            "### Over a normal year (estimate)",
+            "",
+            f"- Heat needed: {year.heat_kwh:.0f} kWh. Gas only: {year.gas_only_eur:.0f} EUR. "
+            f"Heat pumps first (gas tops up on the coldest hours): {year.heat_pump_eur:.0f} EUR, "
+            f"using {year.electricity_kwh:.0f} kWh of electricity.",
+            f"- Saving before the capacity tariff: {year.saving_before_capacity_eur:.0f} EUR.",
+            f"- Capacity tariff ({settings.capacity_eur_per_kw_year:.0f} EUR/kW/year on the yearly "
+            f"average of your monthly peak): the heat pumps following the load add "
+            f"{year.capacity_extra_kw:.2f} kW to it, {year.capacity_eur:.0f} EUR; running flat out "
+            f"in the cold spells {year.capacity_extra_kw_max:.2f} kW, {year.capacity_eur_max:.0f} "
+            "EUR. Both are on top of your own peaks.",
+            f"- **Net saving over a year: {year.net_saving_eur:.0f} EUR**, or "
+            f"{year.net_saving_worst_eur:.0f} EUR in the flat-out case.",
         ]
     return "\n".join(lines) + "\n"
 
