@@ -66,6 +66,7 @@ a { color: var(--text-secondary); }
 .muted { color: var(--text-secondary); font-size: 0.875rem; margin: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 header { margin-bottom: 14px; }
+.head-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 section { margin-bottom: 14px; }
 
 .card, .tile {

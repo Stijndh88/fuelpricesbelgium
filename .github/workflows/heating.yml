@@ -31,4 +31,5 @@ jobs:
           HEATING_ANNUAL_GAS_KWH: ${{ secrets.HEATING_ANNUAL_GAS_KWH }}
           HEATING_BOILER_EFFICIENCY: ${{ secrets.HEATING_BOILER_EFFICIENCY }}
           HEATING_HOT_WATER_SHARE: ${{ secrets.HEATING_HOT_WATER_SHARE }}
+          HEATING_CAPACITY_EUR_PER_KW_YEAR: ${{ secrets.HEATING_CAPACITY_EUR_PER_KW_YEAR }}
         run: python -m heating | tee -a "$GITHUB_STEP_SUMMARY"
