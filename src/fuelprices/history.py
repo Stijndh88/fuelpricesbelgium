@@ -20,8 +20,8 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     day            TEXT PRIMARY KEY,  -- ISO date the prices are valid on
     diesel_max     REAL,              -- official max price diesel B7, EUR/L incl. VAT
     e10_max        REAL,              -- official max price petrol E10 (95), EUR/L incl. VAT
-    diesel_product REAL,              -- wholesale product price diesel, EUR per 1000 L
-    e10_product    REAL,              -- wholesale product price petrol, EUR per 1000 L
+    diesel_product REAL,              -- wholesale product cost diesel, EUR/L (rules input)
+    e10_product    REAL,              -- wholesale product cost petrol, EUR/L (rules input)
     brent_usd      REAL,              -- Brent crude spot, USD per barrel
     updated_at     TEXT NOT NULL      -- UTC timestamp of the last write to this row
 );
