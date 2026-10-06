@@ -32,9 +32,11 @@ def _show(args: argparse.Namespace) -> None:
 
 def _advise(args: argparse.Namespace) -> None:
     today = args.date or date.today()
+    if args.shock_threshold is not None and args.shock_threshold <= 0:
+        args.shock_threshold = None
     conn = history.connect(args.db)
     try:
-        data = advice.export(conn, today)
+        data = advice.export(conn, today, args.shock_threshold)
     finally:
         conn.close()
     print(f"Refuel advice for {today:%a %d %b %Y}")
@@ -42,14 +44,17 @@ def _advise(args: argparse.Namespace) -> None:
         cents = a["expected_change_cents"]
         change = "" if cents is None else f" ({cents:+.1f} cent/L)"
         print(f"  {a['label']:<20} {a['headline']}{change}: {a['reason']}")
+        if a["market_note"] and a["basis"] != "shock":
+            print(f"  {'':<20} {a['market_note']}")
     for b in data["backtest"]:
         if b["windows"]:
+            shock = "off" if b["shock_threshold"] is None else f"{b['shock_threshold']:.0%}"
             print(
-                f"  backtest {b['product']}: saved {b['saved']}, same {b['same']}, "
-                f"lost {b['lost']} of {b['windows']} windows, "
+                f"  backtest {b['product']} (shock flag {shock}): saved {b['saved']}, "
+                f"same {b['same']}, lost {b['lost']} of {b['windows']} windows, "
                 f"average {b['avg_saving_cents']:+.2f} cent/L versus a random day"
             )
-        else:
+        elif b["shock_threshold"] is None:
             print(f"  backtest {b['product']}: {b['note']}")
     if args.json:
         written = advice.write_json(args.json, data)
@@ -72,6 +77,12 @@ def main(argv: list[str] | None = None) -> None:
     advise.add_argument("--db", type=Path, default=history.DEFAULT_DB_PATH, help="SQLite history")
     advise.add_argument("--json", type=Path, help="also write the advice to this JSON file")
     advise.add_argument("--date", type=date.fromisoformat, help="advise as of this day")
+    advise.add_argument(
+        "--shock-threshold",
+        type=float,
+        default=advice.SHOCK_THRESHOLD,
+        help="market move (fraction) that counts as a shock; 0 or less turns the flag off",
+    )
     advise.set_defaults(handler=_advise)
 
     args = parser.parse_args(argv)

@@ -31,3 +31,7 @@ def test_parse_yahoo_chart_skips_missing_closes():
 def test_parse_yahoo_chart_without_bars():
     empty = {"chart": {"result": [{"meta": {}, "indicators": {"quote": [{"close": []}]}}]}}
     assert crude.parse_yahoo_chart(json.dumps(empty)) == {}
+
+
+def test_parse_yahoo_chart_keeps_more_digits_for_futures_per_gallon():
+    assert crude.parse_yahoo_chart(YAHOO_SAMPLE, digits=4)[date(2026, 10, 2)] == 103.1234

@@ -104,3 +104,24 @@ def test_fill_forward_without_prices_does_nothing(conn):
     history.upsert(conn, DailyPrices(day=date(2026, 10, 4), brent_usd=100.0))
     assert history.fill_forward(conn, until=date(2026, 10, 6)) == 0
     assert len(history.all_rows(conn)) == 1
+
+
+def test_connect_adds_new_columns_to_an_old_file(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.sqlite"
+    old = sqlite3.connect(path)
+    old.execute(
+        "CREATE TABLE daily_prices (day TEXT PRIMARY KEY, diesel_max REAL, e10_max REAL,"
+        " diesel_product REAL, e10_product REAL, brent_usd REAL, updated_at TEXT NOT NULL)"
+    )
+    old.execute(
+        "INSERT INTO daily_prices VALUES ('2026-10-07', 2.392, 2.065, NULL, NULL, NULL, 'x')"
+    )
+    old.commit()
+    old.close()
+    conn = history.connect(path)
+    history.upsert(conn, DailyPrices(day=date(2026, 10, 7), ulsd_usd_gal=4.49))
+    assert history.get(conn, date(2026, 10, 7)) == DailyPrices(
+        day=date(2026, 10, 7), diesel_max=2.392, e10_max=2.065, ulsd_usd_gal=4.49
+    )

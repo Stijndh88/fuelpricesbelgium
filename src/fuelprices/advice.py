@@ -9,7 +9,10 @@ The advice is deliberately simple and explains itself in one line. It uses, in o
    free. Brent is a rough stand-in: when it has moved far enough since the last change to leave
    the band of :mod:`fuelprices.rules`, a change in that direction is likely at the next
    computation.
-3. Otherwise: no difference.
+3. **A market shock.** When Brent or the matching product future (US diesel or gasoline) moved
+   more than :data:`SHOCK_THRESHOLD` over :data:`SHOCK_DAYS` days, the max price is likely to
+   follow within days, whatever the band says. This runs before step 2.
+4. Otherwise: no difference.
 
 What it cannot know is listed in :data:`CAVEATS` and shipped with every JSON export.
 """
@@ -46,11 +49,23 @@ MAX_BRENT_AGE_DAYS = 7
 
 ADVISED_PRODUCTS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
 
+# A move of the market of at least this fraction over SHOCK_DAYS calendar days counts as a shock.
+SHOCK_THRESHOLD = 0.05
+SHOCK_DAYS = 5
+LITRES_PER_GALLON = 3.78541
+# Market series checked for shocks per product: (history column, name in the reason).
+SHOCK_SERIES = {
+    Product.DIESEL_B7: (("ulsd_usd_gal", "Diesel futures"), ("brent_usd", "Brent")),
+    Product.E10: (("rbob_usd_gal", "Gasoline futures"), ("brent_usd", "Brent")),
+}
+
 CAVEATS = [
     "The wholesale diesel and petrol quotations that actually trigger a change are not free, "
     "so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
     "The band widths of the price rules are placeholders until calibrated on the history.",
-    "Brent is converted at a fixed EUR/USD rate and lags a few working days.",
+    "Brent and US futures are converted at a fixed EUR/USD rate. The diesel and gasoline futures "
+    "are New York contracts, a stand-in for the Rotterdam quotations Belgium uses.",
+    "The market shock flag looks at prices, not news: news only counts once markets move.",
     "Belgian public holidays and government price freezes are not taken into account.",
     "Pump prices can be below the official maximum; the advice is about the maximum price.",
 ]
@@ -64,10 +79,23 @@ class Advice:
     headline: str
     reason: str
     expected_change_cents: float | None
-    basis: str  # "published", "brent" or "none"
+    basis: str  # "published", "shock", "brent" or "none"
     price_today: float | None
     price_tomorrow: float | None
     next_possible_change: str
+    market_note: str | None = None  # a big market move, shown even when it does not decide
+
+
+@dataclass(frozen=True)
+class MarketMove:
+    name: str
+    change: float  # fraction, +0.06 is a 6% rise
+    eur_per_litre: float  # the same move in EUR/L incl. VAT, as a rough pump price effect
+    since: date
+
+    @property
+    def text(self) -> str:
+        return f"{self.name} {self.change:+.1%} since {self.since:%d/%m}"
 
 
 def brent_to_eur_per_litre(brent_usd: float, eur_usd: float = EUR_USD) -> float:
@@ -105,13 +133,54 @@ def _brent_on_or_before(rows: dict[date, DailyPrices], day: date) -> tuple[date,
     return found, rows[found].brent_usd
 
 
+def _value_on_or_before(rows, column, day):
+    candidates = [d for d, r in rows.items() if d <= day and getattr(r, column) is not None]
+    if not candidates:
+        return None
+    found = max(candidates)
+    return found, getattr(rows[found], column)
+
+
+def _to_eur_per_litre(column: str, value: float) -> float:
+    if column == "brent_usd":
+        return brent_to_eur_per_litre(value)
+    return value / EUR_USD / LITRES_PER_GALLON
+
+
+def market_moves(
+    product: Product, rows: dict[date, DailyPrices], today: date, days: int = SHOCK_DAYS
+) -> list[MarketMove]:
+    """How much each market series for ``product`` moved over the last ``days`` days."""
+    moves = []
+    for column, name in SHOCK_SERIES[product]:
+        latest = _value_on_or_before(rows, column, today)
+        if latest is None or (today - latest[0]).days > MAX_BRENT_AGE_DAYS:
+            continue
+        start = _value_on_or_before(rows, column, latest[0] - timedelta(days=days))
+        if start is None or (latest[0] - start[0]).days > days + 3:
+            continue
+        eur = _to_eur_per_litre(column, latest[1]) - _to_eur_per_litre(column, start[1])
+        moves.append(
+            MarketMove(name, latest[1] / start[1] - 1, eur * (1 + rules.VAT_RATE), start[0])
+        )
+    return moves
+
+
+def shock(moves: Sequence[MarketMove], threshold: float) -> MarketMove | None:
+    """The largest move beyond ``threshold``, unless big moves disagree on the direction."""
+    big = [m for m in moves if abs(m.change) >= threshold]
+    if not big or len({m.change > 0 for m in big}) > 1:
+        return None
+    return max(big, key=lambda m: abs(m.change))
+
+
 def _working_days_between(start: date, end: date) -> int:
     return sum(
         rules.is_computation_day(start + timedelta(days=i)) for i in range((end - start).days)
     )
 
 
-def _make(product, action, reason, change, basis, today_price, tomorrow_price, next_change):
+def _make(product, action, reason, change, basis, today_price, tomorrow_price, next_change, note):
     return Advice(
         product=product.code,
         label=product.label,
@@ -123,6 +192,7 @@ def _make(product, action, reason, change, basis, today_price, tomorrow_price, n
         price_today=today_price,
         price_tomorrow=tomorrow_price,
         next_possible_change=next_change.isoformat(),
+        market_note=note,
     )
 
 
@@ -131,10 +201,12 @@ def advise(
     rows: Sequence[DailyPrices],
     today: date,
     schedule: rules.ThresholdSchedule = rules.UNCONFIRMED_SCHEDULE,
+    shock_threshold: float | None = SHOCK_THRESHOLD,
 ) -> Advice:
     """Advise whether to refuel ``product`` today, using only ``rows`` (the stored history).
 
     Rows dated after tomorrow are ignored, so the same function replays history in the backtest.
+    ``shock_threshold=None`` turns the market shock flag off.
     """
     column = ADVISED_PRODUCTS[product]
     by_day = {r.day: r for r in rows if r.day <= today + timedelta(days=1)}
@@ -142,10 +214,22 @@ def advise(
     price_today = _price(by_day, today, column)
     price_tomorrow = _price(by_day, tomorrow, column)
     next_change = next_possible_change(today)
+    big_move = None
+    if shock_threshold is not None:
+        big_move = shock(market_moves(product, by_day, today), shock_threshold)
+    note = f"Big market move: {big_move.text}." if big_move else None
 
-    def make(action, reason, change, basis):
+    def make(action, reason, change, basis, next_day=None):
         return _make(
-            product, action, reason, change, basis, price_today, price_tomorrow, next_change
+            product,
+            action,
+            reason,
+            change,
+            basis,
+            price_today,
+            price_tomorrow,
+            next_day or next_change,
+            note,
         )
 
     if price_today is None:
@@ -175,10 +259,21 @@ def advise(
         # Same price tomorrow: the next possible change is the computation after that.
         next_change = next_possible_change(tomorrow)
 
+    if big_move and abs(big_move.eur_per_litre) >= MIN_CHANGE_EUR:
+        when = f"{next_change:%a %d/%m}"
+        if big_move.change < 0:
+            reason = f"{big_move.text}: a drop is likely from {when} or soon after."
+            return make(WAIT, reason, big_move.eur_per_litre, "shock", next_change)
+        reason = f"{big_move.text}: a rise is likely from {when} or soon after."
+        return make(FILL_UP, reason, big_move.eur_per_litre, "shock", next_change)
+
     return _brent_advice(product, by_day, today, column, schedule, make, next_change)
 
 
-def _brent_advice(product, by_day, today, column, schedule, make, next_change):
+def _brent_advice(product, by_day, today, column, schedule, make_any, next_change):
+    def make(action, reason, change, basis):
+        return make_any(action, reason, change, basis, next_change)
+
     latest = _brent_on_or_before(by_day, today)
     if latest is None or (today - latest[0]).days > MAX_BRENT_AGE_DAYS:
         return make(
@@ -221,14 +316,20 @@ def _brent_advice(product, by_day, today, column, schedule, make, next_change):
     return make(FILL_UP, f"{brent_text}: a rise is likely from {when}.", expected, "brent")
 
 
-def advise_all(conn: sqlite3.Connection, today: date) -> list[Advice]:
+def advise_all(
+    conn: sqlite3.Connection, today: date, shock_threshold: float | None = SHOCK_THRESHOLD
+) -> list[Advice]:
     rows = history.all_rows(conn)
-    return [advise(product, rows, today) for product in ADVISED_PRODUCTS]
+    return [
+        advise(product, rows, today, shock_threshold=shock_threshold)
+        for product in ADVISED_PRODUCTS
+    ]
 
 
 @dataclass(frozen=True)
 class BacktestResult:
     product: str
+    shock_threshold: float | None  # None: shock flag off
     windows: int
     saved: int
     same: int
@@ -238,7 +339,10 @@ class BacktestResult:
 
 
 def backtest(
-    product: Product, rows: Sequence[DailyPrices], horizon_days: int = 7
+    product: Product,
+    rows: Sequence[DailyPrices],
+    horizon_days: int = 7,
+    shock_threshold: float | None = SHOCK_THRESHOLD,
 ) -> BacktestResult:
     """Compare following the advice with filling up on a random day.
 
@@ -256,7 +360,7 @@ def backtest(
             continue
         fill_day = window[-1]
         for day in window[:-1]:
-            if advise(product, rows, day).action != WAIT:
+            if advise(product, rows, day, shock_threshold=shock_threshold).action != WAIT:
                 fill_day = day
                 break
         baseline = sum(prices[day] for day in window) / len(window)
@@ -265,6 +369,7 @@ def backtest(
     if not savings:
         return BacktestResult(
             product.code,
+            shock_threshold,
             0,
             0,
             0,
@@ -277,6 +382,7 @@ def backtest(
     avg = round(sum(savings) / len(savings) * 100, 2)
     return BacktestResult(
         product.code,
+        shock_threshold,
         len(savings),
         saved,
         len(savings) - saved - lost,
@@ -286,13 +392,25 @@ def backtest(
     )
 
 
-def export(conn: sqlite3.Connection, today: date) -> dict:
+def export(
+    conn: sqlite3.Connection, today: date, shock_threshold: float | None = SHOCK_THRESHOLD
+) -> dict:
+    """Advice for today plus a backtest with and without the market shock flag."""
     rows = history.all_rows(conn)
+    thresholds = [None] if shock_threshold is None else [None, shock_threshold]
     return {
         "as_of": today.isoformat(),
-        "advice": [asdict(advise(p, rows, today)) for p in ADVISED_PRODUCTS],
+        "shock_threshold": shock_threshold,
+        "advice": [
+            asdict(advise(p, rows, today, shock_threshold=shock_threshold))
+            for p in ADVISED_PRODUCTS
+        ],
         "caveats": CAVEATS,
-        "backtest": [asdict(backtest(p, rows)) for p in ADVISED_PRODUCTS],
+        "backtest": [
+            asdict(backtest(p, rows, shock_threshold=t))
+            for p in ADVISED_PRODUCTS
+            for t in thresholds
+        ],
     }
 
 
