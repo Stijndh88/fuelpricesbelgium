@@ -13,7 +13,7 @@ left out.
 | `diesel_pred_dir`, `e10_pred_dir` | forecast of a further change: `up`, `down`, `flat`, or `up_conditional` / `down_conditional` when it depends on the product price holding or moving |
 | `*_pred_ct` | forecast size in cent/L when the issue states one (a range is `7-9`); most issues give a target price or no size, so this is mostly empty |
 | `*_pred_day` | day or days the change is expected, `a/b` for "a or b" |
-| `diesel_product_eur_per_1000l`, `e10_product_eur_per_1000l` | wholesale product price, EUR per 1000 L, only from 8 September on (earlier issues quote nothing or a different unit) |
+| `diesel_product_eur_per_1000l`, `e10_product_eur_per_1000l` | wholesale product price, EUR per 1000 L, only from 22 June on and not in every issue (others quote nothing or a different unit) |
 | `crude_usd` | crude oil price in USD as rounded in the issue |
 
 The product prices are the author's own quotes and have not been checked against the
