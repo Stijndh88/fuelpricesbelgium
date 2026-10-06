@@ -1,0 +1,4 @@
+# All-in variable prices in EUR/kWh (energy, network costs, levies and VAT), one row per month.
+# Replace with the prices on your own supplier's monthly tariff card (tariefkaart).
+month,gas_eur_per_kwh,electricity_eur_per_kwh,source
+2026-09,0.105,0.31,"Test Aankoop, average Flanders September 2026 (gas 0.091-0.122, electricity 0.25-0.37)"
