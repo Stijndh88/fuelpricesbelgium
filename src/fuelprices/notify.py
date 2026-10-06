@@ -3,7 +3,8 @@
 Run by the daily workflow after the advice is written. The topic is the secret NTFY_TOPIC: the
 repository is public, so the topic name must not be committed or printed. Without it, nothing
 is sent. By default a message goes out only when the action for diesel B7 or E10 changed
-compared with the previous data/advice.json; NTFY_DAILY=1 sends a summary every run.
+compared with the previous data/advice.json; NTFY_DAILY=1 sends a summary every run. The text is
+Dutch followed by English; NTFY_LANGUAGES (for example "en" or "en,nl") changes that.
 Only data/advice.json is used, never the private heating module.
 """
 
@@ -15,6 +16,8 @@ import os
 import sys
 import urllib.request
 from pathlib import Path
+
+from fuelprices import messages
 
 DASHBOARD_URL = "https://stijndh88.github.io/fuelpricesbelgium/"
 SERVER = "https://ntfy.sh"
@@ -37,12 +40,35 @@ def changed(current: dict, previous: dict | None) -> bool:
     return any(before.get(p) != a for p, a in _actions(current).items())
 
 
-def build_message(current: dict) -> tuple[str, str]:
-    """Return (title, body): headline and reason per product."""
+def _headline(item: dict, lang: str) -> str:
+    try:
+        return messages.headline(item["action"], lang)
+    except KeyError:
+        return item["headline"]
+
+
+def _reason(item: dict, lang: str) -> str:
+    try:
+        return messages.reason(item["reason_code"], item.get("reason_params"), lang)
+    except KeyError:
+        return item["reason"]  # no code, or a code this version does not know: English text
+
+
+def build_message(
+    current: dict, languages: tuple[str, ...] = messages.LANGUAGES
+) -> tuple[str, str]:
+    """Return (title, body): headline per product in the first language, reasons in all of them."""
     items = [i for i in current.get("advice", []) if i.get("product") in PRODUCTS]
-    title = "Refuel advice: " + ", ".join(f"{i['label']}: {i['headline']}" for i in items)
-    body = "\n".join(f"{i['label']}: {i['reason']}" for i in items)
-    return title, body
+    title_prefix = {"nl": "Tankadvies", "en": "Refuel advice"}.get(languages[0], "Refuel advice")
+    title = f"{title_prefix}: " + ", ".join(
+        f"{i['label']}: {_headline(i, languages[0])}" for i in items
+    )
+    sections = []
+    for lang in languages:
+        section = "\n".join(f"{i['label']}: {_reason(i, lang)}" for i in items)
+        if section not in sections:  # without codes every language falls back to the same text
+            sections.append(section)
+    return title, "\n\n".join(sections)
 
 
 def send(topic: str, title: str, body: str, server: str = SERVER) -> None:
@@ -60,7 +86,12 @@ def send(topic: str, title: str, body: str, server: str = SERVER) -> None:
 
 
 def run(
-    current_path: Path, previous_path: Path | None, topic: str, daily: bool, dry_run: bool
+    current_path: Path,
+    previous_path: Path | None,
+    topic: str,
+    daily: bool,
+    dry_run: bool,
+    languages: tuple[str, ...] = messages.LANGUAGES,
 ) -> str:
     """Decide and send; returns a short status line that is safe to log (no topic)."""
     if not current_path.exists():
@@ -71,7 +102,7 @@ def run(
         previous = json.loads(previous_path.read_text())
     if not (daily or changed(current, previous)):
         return "Advice unchanged; no notification."
-    title, body = build_message(current)
+    title, body = build_message(current, languages)
     if dry_run:
         return f"Dry run, would send:\n{title}\n{body}"
     if not topic:
@@ -88,7 +119,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     daily = os.environ.get("NTFY_DAILY", "") == "1"
     topic = os.environ.get("NTFY_TOPIC", "").strip()
-    print(run(args.advice, args.previous, topic, daily, args.dry_run))
+    wanted = os.environ.get("NTFY_LANGUAGES", "").replace(" ", "").split(",")
+    languages = tuple(lang for lang in wanted if lang in messages.LANGUAGES) or messages.LANGUAGES
+    print(run(args.advice, args.previous, topic, daily, args.dry_run, languages))
     return 0
 
 

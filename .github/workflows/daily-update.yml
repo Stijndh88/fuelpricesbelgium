@@ -60,6 +60,7 @@ jobs:
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
           NTFY_DAILY: ${{ vars.NTFY_DAILY }}
+          NTFY_LANGUAGES: ${{ vars.NTFY_LANGUAGES }}
         run: python -m fuelprices.notify --previous "$RUNNER_TEMP/advice-previous.json"
       - uses: actions/upload-artifact@v4
         if: failure()

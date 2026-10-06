@@ -62,3 +62,13 @@ the ntfy app or on ntfy.sh with the topic name, no account needed. Set the repos
 is skipped. A message goes out only when the action for diesel B7 or E10 changed; set the
 repository variable `NTFY_DAILY` to `1` for a summary every run. Try it locally with
 `python -m fuelprices.notify --dry-run`.
+
+## Languages
+
+Every text in `advice.json` comes as an English sentence plus a stable message code and parameters
+(`reason_code`/`reason_params`, `market_note_params`, `caveat_codes`; the headline follows from
+`action`). The dashboard renders them in Dutch or English from its own table in `site/i18n.js`
+and falls back to the English sentence for a code it does not know. The templates live in
+`src/fuelprices/messages.py`; a test checks both tables hold the same codes. The ntfy message is
+Dutch followed by English; set the repository variable `NTFY_LANGUAGES` (`en`, `nl` or `en,nl`) to
+change that.
