@@ -87,9 +87,8 @@ rules on: that covers about eight real diesel changes. It does show how good the
   0.2), so the E10 fit cannot get good with this stand-in. Belgian petrol follows the Eurobob
   quotation, which is a different contract.
 
-Conclusion: the fit does not reach the 70% bar and cannot with these inputs; predictions beyond
-tomorrow's published price stay a guess. Collecting the newsletter's product price on every issue
-(it appears about twice a week) would slowly build the missing series.
+Conclusion: the fit does not reach the 70% bar with the stand-in; the newsletter is hand-typed and
+not used as a data source. See the official gasoil cost below for the better diesel input.
 
 ### The official gasoil cost: heating oil max price (2026-10-06)
 
