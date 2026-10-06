@@ -6,17 +6,14 @@ jobs:
     steps:
       - run: |
           B=https://petrolfed.be
-          for p in evolutie databank; do curl -sS -L -m 30 -A fb -o /tmp/$p.html "$B/nl/maximumprijzen/$p"; done
-          for p in evolutie databank; do
-            echo "=== $p: module scripts + inline hints"
-            grep -o '/modules/custom/[^"]*\.js[^"]*' /tmp/$p.html | sort -u
-            python3 - $p <<'PY'
-          import re,sys
-          raw=open(f'/tmp/{sys.argv[1]}.html',encoding='utf-8',errors='ignore').read()
-          for m in re.finditer(r'(fetch\(|\.ajax|\$\.get|\$\.post|XMLHttpRequest|maximumprijs[^"\' ]*(json|csv|xls|export|data)|/export|/api/|\.csv|\.xls)',raw,flags=re.I):
-              s=max(0,m.start()-150); print('..',raw[s:m.end()+250].replace('\n',' '))
+          curl -sS -L -m 30 -A fb -o /tmp/evo.js "$B/modules/custom/dms_maximumprijs_export/js/evolutie-chart.js"
+          echo "== evolutie-chart.js size $(wc -c </tmp/evo.js)"
+          grep -n -i -E "getData|fetch|url|ajax|\.get\(|json|api|endpoint|/nl/|/export|XMLHttp|http" /tmp/evo.js | cut -c1-300 | head -40
+          echo "== getData body"
+          python3 - <<'PY'
+          s=open('/tmp/evo.js',encoding='utf-8',errors='ignore').read()
+          i=s.find('function getData')
+          print(s[i:i+2500] if i>=0 else 'no function getData')
           PY
-          done
-          for js in $(grep -o '/modules/custom/dms_maximumprijs_export/js/[^"?]*' /tmp/evolutie.html /tmp/databank.html | cut -d: -f2 | sort -u | grep -v echarts); do
-            echo "=== $js"; curl -sS -L -m 30 -A fb "$B$js" | head -c 6000
-          done
+          echo "== other module js"
+          curl -sS -L -m 30 -A fb "$B/nl/maximumprijzen/databank" | grep -o '/modules/custom/dms_maximumprijs_export/js/[^"?]*' | sort -u
