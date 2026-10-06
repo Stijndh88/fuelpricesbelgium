@@ -1,0 +1,58 @@
+{
+  "diesel_b7": {
+    "product": "diesel_b7",
+    "params": {
+      "start": 0.04,
+      "end": 0.01,
+      "lag": 0,
+      "recenter": "average"
+    },
+    "train_from": "2019-04-02",
+    "train_to": "2026-04-10",
+    "test_from": "2026-04-11",
+    "test_to": "2026-10-07",
+    "train": {
+      "hits": 138,
+      "misses": 177,
+      "false_alarms": 163,
+      "same_day": 55
+    },
+    "test": {
+      "hits": 15,
+      "misses": 23,
+      "false_alarms": 8,
+      "same_day": 5
+    },
+    "pass_through": 0.816,
+    "trusted": false,
+    "note": "Held-out score is too low to trust: predictions stay labelled as a guess."
+  },
+  "e10": {
+    "product": "e10",
+    "params": {
+      "start": 0.05,
+      "end": 0.015,
+      "lag": 0,
+      "recenter": "average"
+    },
+    "train_from": "2019-04-02",
+    "train_to": "2026-04-10",
+    "test_from": "2026-04-11",
+    "test_to": "2026-10-07",
+    "train": {
+      "hits": 110,
+      "misses": 135,
+      "false_alarms": 149,
+      "same_day": 33
+    },
+    "test": {
+      "hits": 7,
+      "misses": 19,
+      "false_alarms": 10,
+      "same_day": 4
+    },
+    "pass_through": 0.816,
+    "trusted": false,
+    "note": "Held-out score is too low to trust: predictions stay labelled as a guess."
+  }
+}
