@@ -17,51 +17,101 @@ jobs:
           python -m fuelprices.backfill --db /tmp/prices.sqlite --since 2019-01-01
       - name: Fit the rules and print the report
         run: fuelprices calibrate --db /tmp/prices.sqlite --json /tmp/calibration.json
-      - name: Diagnostics
+      - name: Explore
         run: |
           python - <<'PY'
-          import sqlite3
-          from datetime import date
-          from fuelprices import calibrate, history
+          import bisect, statistics, itertools, collections
+          from datetime import date, timedelta
+          from fuelprices import calibrate, history, rules
           from fuelprices.products import Product
+
           conn = history.connect("/tmp/prices.sqlite")
           rows = history.all_rows(conn)
-          print("rows", len(rows), rows[0].day, rows[-1].day)
-          for r in rows[-8:]:
-              print(r)
+
+          def wd_between(a, b):  # weekdays in (a, b]
+              n = 0; d = a
+              while d < b:
+                  d += timedelta(days=1)
+                  if d.weekday() < 5: n += 1
+              return n
+
+          def anchored(series, actual, band_start, band_end, lag, recenter, mode, first, last):
+              days, costs = series.days, series.costs
+              sched = calibrate.Params(band_start, band_end, lag, recenter).schedule()
+              real = {a.effective_from: a for a in actual}
+              eff_sorted = [a.effective_from for a in actual]
+              preds = {}  # computation day -> direction
+              d = first
+              while d < last:
+                  if d.weekday() < 5:
+                      k = bisect.bisect_right(eff_sorted, d) - 1
+                      i = bisect.bisect_right(days, d) - 1 - lag
+                      if k >= 0 and i >= 8:
+                          comp = eff_sorted[k] - timedelta(days=1)
+                          j = bisect.bisect_right(days, comp) - 1 - lag
+                          if j >= 7:
+                              base = costs[j] if recenter == "day" else sum(costs[j - 6:j + 1]) / 7
+                              since = wd_between(comp, d)
+                              th = sched.at(max(since, 1))
+                              today = costs[i]; avg = sum(costs[i - 6:i + 1]) / 7
+                              dd = (today - base) / base; da = (avg - base) / base
+                              if mode == "both": up = dd > th and da > th; dn = dd < -th and da < -th
+                              elif mode == "day": up = dd > th; dn = dd < -th
+                              else: up = da > th; dn = da < -th
+                              preds[d] = 1 if up else (-1 if dn else 0)
+                  d += timedelta(days=1)
+              return preds
+
+          def score(preds, actual, start, end):
+              real = {a.effective_from: a.direction for a in actual if start <= a.effective_from <= end and not rules.is_margin_indexation_day(a.effective_from)}
+              tp = fp = fn = 0
+              ptp = pn = 0; rtp = 0
+              for d, p in preds.items():
+                  e = d + timedelta(days=1)
+                  if not (start <= e <= end): continue
+                  a = real.get(e, 0)
+                  if p != 0:
+                      pn += 1
+                      if a == p: tp += 1
+                      else: fp += 1
+                      if any(real.get(d + timedelta(days=o)) == p for o in (1, 2, 3)): ptp += 1
+                  elif a != 0: fn += 1
+                  if a != 0 and p != a: pass
+              # recall within window: real change at E is matched if a same-direction prediction at E-2..E (computation day D=E-1, +-1)
+              nreal = len(real); rec_exact = 0; rec_win = 0
+              for e, a in real.items():
+                  if preds.get(e - timedelta(days=1)) == a: rec_exact += 1
+                  if any(preds.get(e - timedelta(days=o)) == a for o in (0, 1, 2)): rec_win += 1
+              P = tp / pn if pn else 0; R = rec_exact / nreal if nreal else 0
+              Pw = ptp / pn if pn else 0; Rw = rec_win / nreal if nreal else 0
+              f = lambda p, r: 2 * p * r / (p + r) if p + r else 0
+              return dict(n=nreal, pred=pn, P=P, R=R, F=f(P, R), Pw=Pw, Rw=Rw, Fw=f(Pw, Rw))
+
           for product in (Product.DIESEL_B7, Product.E10):
               series = calibrate.build_series(rows, product)
               actual = calibrate.real_changes(series.prices)
-              print("==", product.code, "days with cost", len(series.days), "real changes", len(actual))
-              by_year = {}
-              for a in actual:
-                  by_year[a.effective_from.year] = by_year.get(a.effective_from.year, 0) + 1
-              print("real changes per year", dict(sorted(by_year.items())))
-              cal = calibrate.calibrate_product(product, rows)
-              if cal.params is None:
-                  continue
-              replayed = calibrate.replay(product, series, cal.params)
-              first = series.days[0]
-              print("per-year score of the best params:")
-              for year in range(2020, 2027):
-                  s = calibrate.score_changes(replayed, actual, date(year, 1, 1), date(year, 12, 31))
-                  if s.real_changes or s.false_alarms:
-                      print(" ", year, "real", s.real_changes, "hits", s.hits, "same-day", s.same_day, "misses", s.misses, "false", s.false_alarms, f"P {s.precision:.0%} R {s.recall:.0%}")
-              # top parameter sets on the fit period
-              from datetime import timedelta
-              last = max(series.prices); split = last - timedelta(days=calibrate.HOLDOUT_DAYS)
-              start = first + timedelta(days=calibrate.WARMUP_DAYS)
-              scored = []
-              for p in calibrate.grid():
-                  rp = calibrate.replay(product, series, p)
-                  scored.append((calibrate.score_changes(rp, actual, start, split).f1, p))
-              scored.sort(key=lambda x: -x[0])
-              print("top 6 parameter sets by F1 on the fit period:")
-              for f1, p in scored[:6]:
-                  print(f"  F1 {f1:.2f}", p)
-              print("last 14 real vs replayed changes:")
-              for a in actual[-14:]:
-                  print("  real", a.effective_from, a.direction, round(a.step, 3))
-              for c in replayed[-14:]:
-                  print("  replay", c.effective_from, c.direction)
+              print("=====", product.code, "real changes", len(actual))
+              wd = collections.Counter(a.effective_from.weekday() for a in actual)
+              print("weekday of effective date (Mon=0):", dict(sorted(wd.items())))
+              gaps = collections.Counter((b.effective_from - a.effective_from).days for a, b in zip(actual, actual[1:]))
+              print("gaps in days between changes:", dict(sorted(gaps.items())[:14]))
+              steps = sorted(abs(a.step) for a in actual if a.effective_from.year >= 2023)
+              print("abs step quantiles 2023+ (EUR/L):", [round(steps[int(len(steps) * q)], 3) for q in (0.0, 0.1, 0.25, 0.5, 0.75, 0.9)], "max", round(steps[-1], 3))
+              first = series.days[0] + timedelta(days=120); last = max(series.prices)
+              split = last - timedelta(days=180)
+              grid = [(s / 1000, e / 1000) for s in range(10, 81, 5) for e in range(5, 61, 5) if e <= s]
+              results = []
+              for (s, e), lag, rc, mode in itertools.product(grid, (0, 1), ("day", "average"), ("both", "day", "avg")):
+                  pr = anchored(series, actual, s, e, lag, rc, mode, first, last)
+                  tr = score(pr, actual, first, split)
+                  results.append((tr["F"], tr["Fw"], (s, e, lag, rc, mode), pr))
+              for key, label in ((0, "exact-day F1"), (1, "within-a-day F1")):
+                  results.sort(key=lambda r: -r[key])
+                  print(f"top 6 by fit-period {label}:")
+                  for r in results[:6]:
+                      tr = score(r[3], actual, first, split); te = score(r[3], actual, split + timedelta(days=1), last)
+                      print("  ", r[2], "fit", {k: round(v, 2) for k, v in tr.items()}, "test", {k: round(v, 2) for k, v in te.items()})
+              # mode comparison at the best 'both' params
+              best_both = max((r for r in results if r[2][4] == "both"), key=lambda r: r[1])
+              print("best 'both' (within-a-day):", best_both[2])
           PY

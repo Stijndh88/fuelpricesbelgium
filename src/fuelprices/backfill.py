@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 def backfill(conn, since: date, today: date) -> list[str]:
     """Store everything from ``since`` on. Returns the names of the sources that failed."""
     failed = []
+    conn.execute("PRAGMA synchronous = OFF")  # thousands of small writes; a rerun repeats them
     try:
         records = petrolfed.to_records(petrolfed.fetch(since, today + timedelta(days=1)))
         rows = update.to_daily(records)
