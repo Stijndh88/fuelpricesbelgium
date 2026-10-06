@@ -93,9 +93,7 @@ def official_series(conn: sqlite3.Connection, fuel: str) -> dict[date, float]:
     """Official max price per day from the history, for days that have one."""
     column = f"{fuel}_max"
     return {
-        r.day: getattr(r, column)
-        for r in history.all_rows(conn)
-        if getattr(r, column) is not None
+        r.day: getattr(r, column) for r in history.all_rows(conn) if getattr(r, column) is not None
     }
 
 
