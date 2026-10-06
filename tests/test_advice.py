@@ -25,7 +25,7 @@ def test_published_drop_means_wait():
     assert a.action == advice.WAIT
     assert a.basis == "published"
     assert a.expected_change_cents == -3.0
-    assert "drops 3.0 cent/L tomorrow" in a.reason
+    assert "Wait until tomorrow" in a.reason and "drops 3.0 cent/L" in a.reason
 
 
 def test_published_rise_means_fill_up():
@@ -189,3 +189,35 @@ def test_backtest_reports_with_and_without_shock_flag(tmp_path):
         (b["product"], b["shock_threshold"]) for b in advice.export(conn, MON)["backtest"]
     ]
     assert thresholds == [("diesel_b7", None), ("diesel_b7", 0.05), ("e10", None), ("e10", 0.05)]
+
+
+def test_regression_diesel_2_432_today_2_392_tomorrow_means_wait():
+    # 6 Oct 2026: today's max price 2.432, tomorrow's (published) 2.392. Was "no difference".
+    tue = date(2026, 10, 6)
+    rows = [
+        DailyPrices(day=tue, diesel_max=2.432),
+        DailyPrices(day=tue + timedelta(days=1), diesel_max=2.392),
+    ]
+    a = advice.advise(Product.DIESEL_B7, rows, tue)
+    assert a.action == advice.WAIT
+    assert a.expected_change_cents == -4.0
+    assert "Wait until tomorrow (Wed 07/10)" in a.reason
+    assert (a.price_today, a.price_tomorrow) == (2.432, 2.392)
+
+
+def test_missing_row_for_today_uses_the_price_still_in_force():
+    # A missed daily run leaves no row for today: the last known price is still the max price.
+    rows = [
+        DailyPrices(day=date(2026, 10, 3), diesel_max=2.432),
+        DailyPrices(day=date(2026, 10, 7), diesel_max=2.392),
+    ]
+    a = advice.advise(Product.DIESEL_B7, rows, date(2026, 10, 6))
+    assert a.action == advice.WAIT
+    assert a.price_today == 2.432
+
+
+def test_tomorrow_published_but_today_unknown_says_so():
+    rows = [DailyPrices(day=date(2026, 10, 7), diesel_max=2.392)]
+    a = advice.advise(Product.DIESEL_B7, rows, date(2026, 10, 6))
+    assert a.action == advice.NO_DIFFERENCE
+    assert "today's is not stored yet" in a.reason

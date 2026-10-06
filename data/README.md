@@ -21,3 +21,7 @@ available. A rerun never overwrites a known value
 with an empty one, and leaves the file unchanged when nothing new came in.
 
 Query it with `sqlite3 data/prices.sqlite "select * from daily_prices order by day"`.
+
+The first daily run was on 6 October 2026, after FOD Economie had already switched its page to
+the tariff valid from 7 October, so the price in force on 6 October was never fetched. Diesel
+2.432 EUR/L for that day was entered by hand (told by Stijn); E10 for that day is unknown.
