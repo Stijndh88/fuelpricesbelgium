@@ -1,0 +1,56 @@
+{
+  "as_of": "2026-10-06",
+  "advice": [
+    {
+      "product": "diesel_b7",
+      "label": "Diesel B7",
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "No maximum price known for today.",
+      "expected_change_cents": null,
+      "basis": "none",
+      "price_today": null,
+      "price_tomorrow": 2.392,
+      "next_possible_change": "2026-10-07"
+    },
+    {
+      "product": "e10",
+      "label": "Benzine 95 RON E10",
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "No maximum price known for today.",
+      "expected_change_cents": null,
+      "basis": "none",
+      "price_today": null,
+      "price_tomorrow": 2.065,
+      "next_possible_change": "2026-10-07"
+    }
+  ],
+  "caveats": [
+    "The wholesale diesel and petrol quotations that actually trigger a change are not free, so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
+    "The band widths of the price rules are placeholders until calibrated on the history.",
+    "Brent is converted at a fixed EUR/USD rate and lags a few working days.",
+    "Belgian public holidays and government price freezes are not taken into account.",
+    "Pump prices can be below the official maximum; the advice is about the maximum price."
+  ],
+  "backtest": [
+    {
+      "product": "diesel_b7",
+      "windows": 0,
+      "saved": 0,
+      "same": 0,
+      "lost": 0,
+      "avg_saving_cents": null,
+      "note": "Not enough history yet: needs 7 consecutive days with a price."
+    },
+    {
+      "product": "e10",
+      "windows": 0,
+      "saved": 0,
+      "same": 0,
+      "lost": 0,
+      "avg_saving_cents": null,
+      "note": "Not enough history yet: needs 7 consecutive days with a price."
+    }
+  ]
+}
