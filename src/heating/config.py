@@ -6,7 +6,14 @@ import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
-from heating.model import DEFAULT_COP_CURVE, CopCurve, loss_from_annual_gas
+from heating.model import (
+    DEFAULT_COP_CURVE,
+    CopCurve,
+    HeatPumpSystem,
+    HeatPumpUnit,
+    loss_from_annual_gas,
+    scaled_to_scop,
+)
 
 DEFAULT_CONFIG_PATH = Path("config/heating.toml")
 
@@ -21,6 +28,11 @@ class Settings:
     base_temp: float = 16.5
     degree_days: float = 2400
     cop_curve: CopCurve = CopCurve(DEFAULT_COP_CURVE)
+    heat_pumps: HeatPumpSystem = HeatPumpSystem()
+
+    @property
+    def capacity_known(self) -> bool:
+        return bool(self.heat_pumps.units)
 
     @property
     def loss_kwh_per_degree_day(self) -> float:
@@ -35,7 +47,25 @@ def load(path: str | Path = DEFAULT_CONFIG_PATH) -> Settings:
     location, boiler = raw.get("location", {}), raw.get("boiler", {})
     house, heat_pump = raw.get("house", {}), raw.get("heat_pump", {})
     defaults = Settings()
+    units = HeatPumpSystem(
+        tuple(
+            HeatPumpUnit(
+                name=u["name"],
+                heating_kw=u["heating_kw"],
+                heating_kw_at_minus10=u["heating_kw_at_minus10"],
+                scop=u["scop"],
+            )
+            for u in heat_pump.get("units", [])
+        )
+    )
     curve = heat_pump.get("cop_curve")
+    if curve:
+        cop_curve = CopCurve(tuple((float(t), float(c)) for t, c in curve))
+    elif units.units:
+        # No measured curve: take the generic shape and scale it to the units' SCOP.
+        cop_curve = scaled_to_scop(defaults.cop_curve, units.scop)
+    else:
+        cop_curve = defaults.cop_curve
     return Settings(
         latitude=location.get("latitude", defaults.latitude),
         longitude=location.get("longitude", defaults.longitude),
@@ -44,7 +74,6 @@ def load(path: str | Path = DEFAULT_CONFIG_PATH) -> Settings:
         hot_water_share=house.get("hot_water_share", defaults.hot_water_share),
         base_temp=house.get("base_temp", defaults.base_temp),
         degree_days=house.get("degree_days", defaults.degree_days),
-        cop_curve=CopCurve(tuple((float(t), float(c)) for t, c in curve))
-        if curve
-        else defaults.cop_curve,
+        cop_curve=cop_curve,
+        heat_pumps=units,
     )

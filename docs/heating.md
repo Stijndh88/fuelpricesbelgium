@@ -19,6 +19,18 @@ heat pump is the cheaper one. It is separate from the car fuel code (`src/heatin
 - The "Heating advice" GitHub Action runs each morning from October to April and writes the
   report to the run's summary page.
 
+## The airco units
+
+Each outdoor unit is listed with its rated heating power at +7 °C and at -10 °C and its SCOP.
+- **COP curve:** a generic COP-by-temperature curve is scaled so that, over the EN 14825
+  average heating season, it gives the units' combined SCOP (4.41 for the AJ040 plus AJ068).
+  This is an estimate of the shape; datasheet COP values at several temperatures would be better.
+- **Capacity:** the available heating power falls linearly from the +7 °C rating to the -10 °C
+  rating (12.2 kW to 7.8 kW for both outdoor units together). On a day when the house needs more
+  heat than that, the model lets gas cover the rest and the report shows the share the heat
+  pumps deliver. The model counts the rated power for the whole outdoor unit; in practice each
+  indoor unit only heats its own room.
+
 ## Data sources
 
 | what | source | status |
@@ -38,8 +50,9 @@ tariff card is the only exact source.
 - Your supplier's all-in variable price for gas and electricity each month
   (`data/heating_tariffs.csv`). If you have a fixed-price contract, one row is enough.
 - Your annual gas use in kWh from the yearly bill, and the boiler type (condensing or not).
-- Your airco units' COP at a few outdoor temperatures (datasheet, EN 14511: usually +7, +2,
-  -7 °C) or at least the SCOP, and your location.
+- Your location, for the weather. The airco units are already in `config/heating.toml`
+  (Samsung AJ040 and AJ068, from the datasheets). Measured COP values at a few outdoor
+  temperatures would replace the SCOP-based estimate below.
 
 ## Limits
 
