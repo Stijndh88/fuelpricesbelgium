@@ -29,6 +29,7 @@ MAX_PRICE_COLUMNS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
 
 MaxPriceFetcher = Callable[[], Iterable[PriceRecord]]
 BrentFetcher = Callable[[date], dict[date, float]]
+FuturesFetcher = Callable[[date], dict[str, dict[date, float]]]
 
 
 def to_daily(records: Iterable[PriceRecord]) -> list[DailyPrices]:
@@ -46,10 +47,12 @@ def run(
     today: date,
     fetch_max: MaxPriceFetcher | None = None,
     fetch_brent: BrentFetcher | None = None,
+    fetch_futures: FuturesFetcher | None = None,
 ) -> list[str]:
     """Fetch every source and store the results. Returns the names of failed sources."""
     fetch_max = fetch_max or fod.fetch_prices
     fetch_brent = fetch_brent or crude.fetch_brent
+    fetch_futures = fetch_futures or crude.fetch_product_futures
     failed = []
 
     try:
@@ -76,6 +79,17 @@ def run(
             history.upsert(conn, DailyPrices(day=day, brent_usd=price))
         log.info("brent: %d day(s) since %s", len(brent), min(brent, default="-"))
 
+    try:
+        futures = fetch_futures(today - timedelta(days=BRENT_LOOKBACK_DAYS))
+    except Exception:
+        log.exception("product futures: fetch failed")
+        failed.append("futures")
+    else:
+        for column, prices in futures.items():
+            for day, price in prices.items():
+                history.upsert(conn, DailyPrices(day=day, **{column: price}))
+            log.info("%s: %d day(s)", column, len(prices))
+
     # Carry max prices over to days without a publication, up to the last day they are known for.
     history.fill_forward(conn, until=max([today, *(r.day for r in rows)]))
     return failed
@@ -100,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
         failed = run(conn, date.today(), fetch_max=fetch_max)
     finally:
         conn.close()
-    # The official max prices are the point of the job; a missing Brent value is tolerated.
+    # The official max prices are the point of the job; missing market prices are tolerated.
     return 1 if "max_prices" in failed else 0
 
 

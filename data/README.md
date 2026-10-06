@@ -11,6 +11,8 @@ morning by the "Daily price update" GitHub Action (`python -m fuelprices.update`
 | `diesel_product` | wholesale product cost, diesel | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `e10_product` | wholesale product cost, petrol | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `brent_usd` | Brent crude, front-month ICE future daily close | USD per barrel | Yahoo Finance `BZ=F` (unofficial endpoint) |
+| `ulsd_usd_gal` | NYMEX ULSD (New York Harbor diesel) future, front month, daily close | USD per gallon | Yahoo Finance `HO=F` (unofficial endpoint) |
+| `rbob_usd_gal` | NYMEX RBOB gasoline future, front month, daily close | USD per gallon | Yahoo Finance `RB=F` (unofficial endpoint) |
 | `updated_at` | last time a value in the row changed | UTC timestamp | |
 
 Max prices stay in force until a new one is published, so days without a publication

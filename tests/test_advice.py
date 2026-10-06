@@ -135,3 +135,57 @@ def test_cli_advise_writes_json(tmp_path):
     out = tmp_path / "advice.json"
     cli.main(["advise", "--db", str(db), "--json", str(out), "--date", "2026-10-05"])
     assert json.loads(out.read_text())["advice"][0]["action"] == "fill_up_today"
+
+
+def market(start, diesel, brent=None, ulsd=None):
+    rows = days(start, diesel, brent)
+    ulsd = ulsd or [None] * len(diesel)
+    return [
+        DailyPrices(**{**r.__dict__, "ulsd_usd_gal": u}) for r, u in zip(rows, ulsd, strict=True)
+    ]
+
+
+def test_diesel_futures_shock_means_fill_up():
+    # Max price flat, Brent flat, but diesel futures +8% in five days: a rise is coming.
+    rows = market(MON, [2.40] * 6, [80] * 6, [2.50, 2.52, 2.55, 2.60, 2.65, 2.70])
+    a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=5))
+    assert a.action == advice.FILL_UP
+    assert a.basis == "shock"
+    assert "Diesel futures +8.0%" in a.reason
+    assert a.expected_change_cents > 5
+    # Turned off, the same history falls through to the Brent band: no difference.
+    off = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=5), shock_threshold=None)
+    assert off.action == advice.NO_DIFFERENCE
+    assert off.market_note is None
+
+
+def test_brent_crash_means_wait_and_threshold_is_configurable():
+    rows = market(MON, [2.40] * 6, [80, 79, 78, 77, 76, 75.5])  # -5.6%
+    friday = MON + timedelta(days=4)
+    assert advice.advise(Product.E10, rows, friday + timedelta(days=1)).action == advice.WAIT
+    high = advice.advise(Product.E10, rows, friday + timedelta(days=1), shock_threshold=0.10)
+    assert high.basis != "shock"
+
+
+def test_conflicting_shocks_cancel_out():
+    rows = market(MON, [2.40] * 6, [80, 80, 80, 80, 80, 74], [2.5, 2.5, 2.5, 2.5, 2.5, 2.7])
+    a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=5))
+    assert a.basis != "shock"
+
+
+def test_published_price_beats_shock_but_keeps_the_note():
+    rows = market(MON, [2.40] * 6 + [2.37], [80] * 7, [2.5, 2.5, 2.55, 2.6, 2.65, 2.7, None])
+    a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=5))
+    assert a.action == advice.WAIT
+    assert a.basis == "published"
+    assert a.market_note.startswith("Big market move: Diesel futures +8.0%")
+
+
+def test_backtest_reports_with_and_without_shock_flag(tmp_path):
+    conn = history.connect(tmp_path / "prices.sqlite")
+    for row in market(MON, [2.40] * 8):
+        history.upsert(conn, row)
+    thresholds = [
+        (b["product"], b["shock_threshold"]) for b in advice.export(conn, MON)["backtest"]
+    ]
+    assert thresholds == [("diesel_b7", None), ("diesel_b7", 0.05), ("e10", None), ("e10", 0.05)]

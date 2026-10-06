@@ -1,5 +1,6 @@
 {
   "as_of": "2026-10-06",
+  "shock_threshold": 0.05,
   "advice": [
     {
       "product": "diesel_b7",
@@ -11,7 +12,8 @@
       "basis": "none",
       "price_today": null,
       "price_tomorrow": 2.392,
-      "next_possible_change": "2026-10-07"
+      "next_possible_change": "2026-10-07",
+      "market_note": null
     },
     {
       "product": "e10",
@@ -23,19 +25,32 @@
       "basis": "none",
       "price_today": null,
       "price_tomorrow": 2.065,
-      "next_possible_change": "2026-10-07"
+      "next_possible_change": "2026-10-07",
+      "market_note": null
     }
   ],
   "caveats": [
     "The wholesale diesel and petrol quotations that actually trigger a change are not free, so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
     "The band widths of the price rules are placeholders until calibrated on the history.",
-    "Brent is converted at a fixed EUR/USD rate and lags a few working days.",
+    "Brent and US futures are converted at a fixed EUR/USD rate. The diesel and gasoline futures are New York contracts, a stand-in for the Rotterdam quotations Belgium uses.",
+    "The market shock flag looks at prices, not news: news only counts once markets move.",
     "Belgian public holidays and government price freezes are not taken into account.",
     "Pump prices can be below the official maximum; the advice is about the maximum price."
   ],
   "backtest": [
     {
       "product": "diesel_b7",
+      "shock_threshold": null,
+      "windows": 0,
+      "saved": 0,
+      "same": 0,
+      "lost": 0,
+      "avg_saving_cents": null,
+      "note": "Not enough history yet: needs 7 consecutive days with a price."
+    },
+    {
+      "product": "diesel_b7",
+      "shock_threshold": 0.05,
       "windows": 0,
       "saved": 0,
       "same": 0,
@@ -45,6 +60,17 @@
     },
     {
       "product": "e10",
+      "shock_threshold": null,
+      "windows": 0,
+      "saved": 0,
+      "same": 0,
+      "lost": 0,
+      "avg_saving_cents": null,
+      "note": "Not enough history yet: needs 7 consecutive days with a price."
+    },
+    {
+      "product": "e10",
+      "shock_threshold": 0.05,
       "windows": 0,
       "saved": 0,
       "same": 0,

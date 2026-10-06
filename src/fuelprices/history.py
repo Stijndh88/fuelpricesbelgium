@@ -27,7 +27,15 @@ CREATE TABLE IF NOT EXISTS daily_prices (
 );
 """
 
-VALUE_COLUMNS = ("diesel_max", "e10_max", "diesel_product", "e10_product", "brent_usd")
+VALUE_COLUMNS = (
+    "diesel_max",
+    "e10_max",
+    "diesel_product",
+    "e10_product",
+    "brent_usd",
+    "ulsd_usd_gal",
+    "rbob_usd_gal",
+)
 
 
 @dataclass(frozen=True)
@@ -38,6 +46,8 @@ class DailyPrices:
     diesel_product: float | None = None
     e10_product: float | None = None
     brent_usd: float | None = None
+    ulsd_usd_gal: float | None = None
+    rbob_usd_gal: float | None = None
 
 
 def connect(path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
@@ -46,6 +56,12 @@ def connect(path: str | Path = DEFAULT_DB_PATH) -> sqlite3.Connection:
     path.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path)
     conn.executescript(SCHEMA)
+    # Columns added after the first release: add them to older files.
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(daily_prices)")}
+    with conn:
+        for column in VALUE_COLUMNS:
+            if column not in existing:
+                conn.execute(f"ALTER TABLE daily_prices ADD COLUMN {column} REAL")
     return conn
 
 
