@@ -11,8 +11,14 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: "30 5 * * *" # each morning (07:30 Belgian summer time): today's prices
-    - cron: "30 15 * * 1-5" # weekdays, after FOD Economie publishes the next day's prices
+    # Tomorrow's maximum price is known by the morning (the Energieprijzen newsletter
+    # already quotes it at about 07:45 UTC). GitHub cron runs are often late, so run a few times
+    # from the early morning on; a run without new prices leaves the files untouched. The run log
+    # shows which valid-from date each run saw, i.e. when a new price first appears.
+    - cron: "30 5 * * *"
+    - cron: "15 7 * * *"
+    - cron: "15 8 * * *"
+    - cron: "15 10 * * *"
 
 permissions:
   contents: write
