@@ -4,9 +4,14 @@
 // data/advice.json (written by the refuel advice job, optional) and draws everything client-side.
 
 const PRODUCTS = [
-  { key: "diesel", adviceKey: "diesel_b7", label: "Diesel B7", color: "--series-1" },
-  { key: "e10", adviceKey: "e10", label: "Petrol E10", color: "--series-2" },
-];
+  { key: "diesel", adviceKey: "diesel_b7", color: "--series-1" },
+  { key: "e10", adviceKey: "e10", color: "--series-2" },
+].map((p) => ({
+  ...p,
+  get label() {
+    return t(p.key);
+  },
+}));
 const DAY_MS = 86400000;
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -14,9 +19,12 @@ const brusselsToday = () =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Brussels" }).format(new Date());
 const dayNumber = (iso) => Date.parse(iso + "T00:00:00Z") / DAY_MS;
 const fmtDay = (iso, opts = { weekday: "short", day: "numeric", month: "short" }) =>
-  new Date(iso + "T00:00:00Z").toLocaleDateString("en-GB", { timeZone: "UTC", ...opts });
-const fmtEur = (v) => (v == null ? "–" : "€" + v.toFixed(3));
-const fmtUsd = (v) => (v == null ? "–" : "$" + v.toFixed(2));
+  new Date(iso + "T00:00:00Z").toLocaleDateString(locale(), { timeZone: "UTC", ...opts });
+const fmtShortDay = (iso) => fmtDay(iso, { day: "numeric", month: "short" });
+const num = (v, digits) =>
+  new Intl.NumberFormat(locale(), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(v);
+const fmtEur = (v) => (v == null ? "–" : "€" + num(v, 3));
+const fmtUsd = (v) => (v == null ? "–" : "$" + num(v, 2));
 const cssVar = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 function el(tag, attrs = {}, text) {
@@ -57,12 +65,12 @@ function renderTiles(days, today) {
 
     const rows = el("div", { class: "tile-rows" });
     const nowCol = el("div");
-    nowCol.append(el("div", { class: "tile-when" }, current ? "Today" : "No price yet"));
+    nowCol.append(el("div", { class: "tile-when" }, current ? t("today") : t("no_price_yet")));
     if (current) {
       const value = el("div", { class: "tile-value" }, fmtEur(current[p.key]));
-      value.append(el("small", {}, " /L"));
+      value.append(el("small", {}, t("per_litre")));
       nowCol.append(value);
-      if (current.day !== today) nowCol.append(el("div", { class: "tile-when" }, "since " + fmtDay(current.day)));
+      if (current.day !== today) nowCol.append(el("div", { class: "tile-when" }, t("since", { day: fmtDay(current.day) })));
     }
     rows.append(nowCol);
 
@@ -70,13 +78,13 @@ function renderTiles(days, today) {
     if (next) {
       nextCol.append(el("div", { class: "tile-when" }, fmtDay(next.day)));
       const value = el("div", { class: "tile-value" }, fmtEur(next[p.key]));
-      value.append(el("small", {}, " /L"));
+      value.append(el("small", {}, t("per_litre")));
       nextCol.append(value);
       if (current) nextCol.append(deltaNode(next[p.key] - current[p.key]));
     } else {
-      nextCol.append(el("div", { class: "tile-when" }, "Tomorrow"));
+      nextCol.append(el("div", { class: "tile-when" }, t("tomorrow")));
       nextCol.append(
-        el("div", { class: "tile-pending" }, "Not published yet. FOD Economie announces changes on working days, in the afternoon."),
+        el("div", { class: "tile-pending" }, t("not_published")),
       );
     }
     rows.append(nextCol);
@@ -87,16 +95,39 @@ function renderTiles(days, today) {
 
 function deltaNode(diff) {
   const cents = Math.round(diff * 1000) / 10;
-  if (cents === 0) return el("div", { class: "delta same" }, "= unchanged");
+  if (cents === 0) return el("div", { class: "delta same" }, t("unchanged"));
   const up = cents > 0;
   return el(
     "div",
     { class: "delta " + (up ? "up" : "down") },
-    `${up ? "▲ up" : "▼ down"} ${Math.abs(cents).toFixed(1)} cent`,
+    t(up ? "up" : "down", { cents: num(Math.abs(cents), 1) }),
   );
 }
 
 // ---- Refuel advice (optional file) ----
+
+// Turn the parameters that come with a reason code into display text for the current language.
+function adviceParams(params = {}) {
+  const out = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (["day", "when"].includes(key)) out[key] = fmtDay(value);
+    else if (key === "since") out[key] = fmtShortDay(value);
+    else if (key === "pct") out[key] = (value > 0 ? "+" : "") + num(value, 1) + "%";
+    else if (key === "name") out[key] = hasText("market_names." + value) ? t("market_names." + value) : value;
+    else if (["today", "tomorrow"].includes(key)) out[key] = num(value, 3);
+    else if (key === "cents") out[key] = num(value, 1);
+    else if (typeof value === "number") out[key] = num(value, 0);
+    else out[key] = value;
+  }
+  return out;
+}
+
+// The advice text in the current language: from its code when the page knows it, otherwise
+// the English sentence the advice job wrote.
+function adviceText(codeKey, code, params, fallback) {
+  const key = codeKey + "." + code;
+  return code && hasText(key) ? t(key, adviceParams(params)) : fallback;
+}
 
 function renderAdvice(data) {
   // Shape written by `fuelprices advise --json data/advice.json` (see fuelprices.advice).
@@ -106,16 +137,29 @@ function renderAdvice(data) {
     .filter(([, a]) => a)
     .map(([p, a]) => {
       const item = el("div", { class: "advice-item " + String(a.action || "").replace(/[^a-z_]/g, "") });
-      item.append(el("div", { class: "advice-head" }, `${a.label || p.label}: ${a.headline || a.action || "–"}`));
-      if (a.reason) item.append(el("div", { class: "advice-reason" }, a.reason));
-      if (a.market_note) item.append(el("div", { class: "advice-reason" }, "⚠ " + a.market_note));
+      const headline = hasText("headlines." + a.action) ? t("headlines." + a.action) : a.headline || a.action || "–";
+      item.append(el("div", { class: "advice-head" }, `${p.label}: ${headline}`));
+      const reason = adviceText("reasons", a.reason_code, a.reason_params, a.reason);
+      if (reason) item.append(el("div", { class: "advice-reason" }, reason));
+      if (a.market_note) {
+        const note = a.market_note_params
+          ? t("market_note", adviceParams(a.market_note_params))
+          : a.market_note;
+        item.append(el("div", { class: "advice-reason" }, "⚠ " + note));
+      }
       return item;
     });
-  if (!items.length) return; // keep the placeholder
+  if (!items.length) {
+    box.replaceChildren(el("p", { class: "muted" }, t("advice_placeholder")));
+    return;
+  }
   box.replaceChildren(...items);
-  const caveats = Array.isArray(data.caveats) ? data.caveats : [];
+  const codes = Array.isArray(data.caveat_codes) ? data.caveat_codes : [];
+  const caveats = (Array.isArray(data.caveats) ? data.caveats : []).map((text, i) =>
+    codes[i] && hasText("caveats." + codes[i]) ? t("caveats." + codes[i]) : text,
+  );
   if (caveats.length) box.append(el("p", { class: "muted" }, caveats.join(" ")));
-  if (data.as_of) box.append(el("p", { class: "muted" }, "Advice for " + fmtDay(data.as_of)));
+  if (data.as_of) box.append(el("p", { class: "muted" }, t("advice_for", { day: fmtDay(data.as_of) })));
 }
 
 // ---- Line chart with crosshair tooltip ----
@@ -135,7 +179,7 @@ function lineChart(container, { days, series, format, tickFormat, step = false, 
   const points = series.map((s) => days.filter((d) => d[s.key] != null).map((d) => ({ day: d.day, x: dayNumber(d.day), y: d[s.key] })));
   const all = points.flat();
   if (all.length === 0) {
-    container.append(el("p", { class: "empty" }, "No data yet. The daily job adds a point each day."));
+    container.append(el("p", { class: "empty" }, t("chart_empty")));
     return;
   }
 
@@ -172,8 +216,11 @@ function lineChart(container, { days, series, format, tickFormat, step = false, 
   // A handful of date ticks, never crowding on a phone.
   const xTickCount = Math.max(2, Math.min(5, Math.floor(w / 90)));
   const spanDays = x1 - x0;
+  const seenTicks = new Set();
   for (let i = 0; i <= xTickCount; i++) {
     const x = Math.round(x0 + (spanDays * i) / xTickCount);
+    if (seenTicks.has(x)) continue;
+    seenTicks.add(x);
     const iso = new Date(x * DAY_MS).toISOString().slice(0, 10);
     const opts = spanDays > 300 ? { month: "short", year: "2-digit" } : { day: "numeric", month: "short" };
     const anchor = i === 0 ? "start" : i === xTickCount ? "end" : "middle";
@@ -184,7 +231,7 @@ function lineChart(container, { days, series, format, tickFormat, step = false, 
   if (today && dayNumber(today) < x1 && dayNumber(today) >= x0) {
     root.append(svg("line", { class: "axis-line", x1: sx(dayNumber(today)), x2: sx(dayNumber(today)), y1: m.top, y2: m.top + h }));
     if (sx(dayNumber(today)) - m.left > 40) {
-      root.append(svg("text", { class: "tick", x: sx(dayNumber(today)) - 4, y: m.top + 10, "text-anchor": "end" }, "today"));
+      root.append(svg("text", { class: "tick", x: sx(dayNumber(today)) - 4, y: m.top + 10, "text-anchor": "end" }, t("chart_marker")));
     }
   }
 
@@ -294,7 +341,7 @@ function renderTable(days) {
 
 // ---- Page ----
 
-const state = { days: [], rangeDays: 90, today: brusselsToday() };
+const state = { days: [], generatedAt: null, advice: null, loaded: false, rangeDays: 90, today: brusselsToday() };
 
 function visibleDays() {
   if (!state.rangeDays) return state.days;
@@ -305,22 +352,22 @@ function visibleDays() {
 function renderCharts() {
   const days = visibleDays();
   const priceChart = document.getElementById("price-chart");
-  priceChart.dataset.label = "Official maximum price per litre for diesel B7 and petrol E10";
+  priceChart.dataset.label = t("chart_label_price");
   lineChart(priceChart, {
     days,
     series: PRODUCTS,
     step: true,
     today: state.today,
     format: fmtEur,
-    tickFormat: (v, s) => "€" + v.toFixed(s < 0.01 ? 3 : 2),
+    tickFormat: (v, s) => "€" + num(v, s < 0.01 ? 3 : 2),
   });
   const brentChart = document.getElementById("brent-chart");
-  brentChart.dataset.label = "Brent crude oil spot price in US dollar per barrel";
+  brentChart.dataset.label = t("chart_label_brent");
   lineChart(brentChart, {
     days,
     series: [{ key: "brent", label: "Brent", color: "--brent" }],
     format: fmtUsd,
-    tickFormat: (v, s) => "$" + v.toFixed(s < 1 ? 1 : 0),
+    tickFormat: (v, s) => "$" + num(v, s < 1 ? 1 : 0),
   });
 }
 
@@ -337,26 +384,46 @@ function renderLegend() {
   );
 }
 
+// Text that is in the HTML: data-i18n sets the text, data-i18n-attr the named attribute.
+function applyStaticText() {
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  document.querySelector('meta[name="description"]').setAttribute("content", t("description"));
+  for (const node of document.querySelectorAll("[data-i18n]")) node.textContent = t(node.dataset.i18n);
+  for (const node of document.querySelectorAll("[data-i18n-label]")) node.setAttribute("aria-label", t(node.dataset.i18nLabel));
+  for (const button of document.querySelectorAll("#lang button")) button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
+}
+
+function renderAll() {
+  applyStaticText();
+  const updated = document.getElementById("updated");
+  if (!state.loaded) return;
+  const stamp = state.generatedAt
+    ? new Date(state.generatedAt).toLocaleString(locale(), { timeZone: "Europe/Brussels", dateStyle: "medium", timeStyle: "short" })
+    : "?";
+  updated.textContent = t("updated", { stamp });
+  renderTiles(state.days, state.today);
+  renderLegend();
+  renderCharts();
+  renderTable(state.days);
+  renderAdvice(state.advice);
+}
+
 async function main() {
+  applyStaticText();
   const updated = document.getElementById("updated");
   let prices;
   try {
     prices = await getJson("data/prices.json");
   } catch (err) {
-    updated.textContent = "Could not load the prices. Try again later.";
+    updated.textContent = t("load_error");
     console.error(err);
     return;
   }
   state.days = prices.days || [];
-  const stamp = prices.generated_at
-    ? new Date(prices.generated_at).toLocaleString("en-GB", { timeZone: "Europe/Brussels", dateStyle: "medium", timeStyle: "short" })
-    : "unknown";
-  updated.textContent = `Official maximum prices, updated ${stamp}.`;
-
-  renderTiles(state.days, state.today);
-  renderLegend();
-  renderCharts();
-  renderTable(state.days);
+  state.generatedAt = prices.generated_at || null;
+  state.loaded = true;
+  renderAll();
 
   document.getElementById("range").addEventListener("click", (e) => {
     const button = e.target.closest("button");
@@ -365,6 +432,12 @@ async function main() {
     for (const b of e.currentTarget.querySelectorAll("button")) b.setAttribute("aria-pressed", String(b === button));
     renderCharts();
   });
+  document.getElementById("lang").addEventListener("click", (e) => {
+    const button = e.target.closest("button");
+    if (!button || button.dataset.lang === lang) return;
+    setLang(button.dataset.lang);
+    renderAll();
+  });
   let resizeTimer;
   window.addEventListener("resize", () => {
     clearTimeout(resizeTimer);
@@ -372,7 +445,13 @@ async function main() {
   });
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderCharts);
 
-  getJson("data/advice.json").then(renderAdvice, () => {});
+  getJson("data/advice.json").then(
+    (data) => {
+      state.advice = data;
+      renderAdvice(data);
+    },
+    () => {},
+  );
 }
 
 main();
