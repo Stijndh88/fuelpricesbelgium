@@ -98,22 +98,23 @@ function deltaNode(diff) {
 
 // ---- Refuel advice (optional file) ----
 
-function renderAdvice(advice) {
+function renderAdvice(data) {
+  // Shape written by `fuelprices advise --json data/advice.json` (see fuelprices.advice).
   const box = document.getElementById("advice");
-  const products = advice && advice.products;
-  if (!products) return; // keep the placeholder
-  const items = PRODUCTS.filter((p) => products[p.adviceKey]).map((p) => {
-    const a = products[p.adviceKey];
-    const item = el("div", { class: "advice-item " + String(a.action || "").replace(/[^a-z_]/g, "") });
-    item.append(el("div", { class: "advice-head" }, `${p.label}: ${a.advice || a.action || "–"}`));
-    if (a.reason) item.append(el("div", { class: "advice-reason" }, a.reason));
-    return item;
-  });
-  if (!items.length) return;
+  const list = (data && Array.isArray(data.advice) && data.advice) || [];
+  const items = PRODUCTS.map((p) => [p, list.find((a) => a.product === p.adviceKey)])
+    .filter(([, a]) => a)
+    .map(([p, a]) => {
+      const item = el("div", { class: "advice-item " + String(a.action || "").replace(/[^a-z_]/g, "") });
+      item.append(el("div", { class: "advice-head" }, `${a.label || p.label}: ${a.headline || a.action || "–"}`));
+      if (a.reason) item.append(el("div", { class: "advice-reason" }, a.reason));
+      return item;
+    });
+  if (!items.length) return; // keep the placeholder
   box.replaceChildren(...items);
-  if (advice.generated_at) {
-    box.append(el("p", { class: "muted" }, "Advice from " + new Date(advice.generated_at).toLocaleString("en-GB", { timeZone: "Europe/Brussels", dateStyle: "medium", timeStyle: "short" })));
-  }
+  const caveats = Array.isArray(data.caveats) ? data.caveats : [];
+  if (caveats.length) box.append(el("p", { class: "muted" }, caveats.join(" ")));
+  if (data.as_of) box.append(el("p", { class: "muted" }, "Advice for " + fmtDay(data.as_of)));
 }
 
 // ---- Line chart with crosshair tooltip ----
