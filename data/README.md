@@ -26,3 +26,9 @@ Query it with `sqlite3 data/prices.sqlite "select * from daily_prices order by d
 The first daily run was on 6 October 2026, after FOD Economie had already switched its page to
 the tariff valid from 7 October, so the price in force on 6 October was never fetched. Diesel
 2.432 EUR/L for that day was entered by hand (told by Stijn); E10 for that day is unknown.
+
+## Newsletter facts
+
+`newsletter_predictions.csv` holds the max prices, product prices, crude price and forecasts
+stated in the Energieprijzen.vlaanderen newsletter (only numbers). Its columns and how well the
+forecasts did are in [../docs/newsletter-predictions.md](../docs/newsletter-predictions.md).
