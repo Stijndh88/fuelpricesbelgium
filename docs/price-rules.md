@@ -66,3 +66,27 @@ beyond tomorrow's published price stay labelled as a guess. The most likely reas
 cost differs from the Rotterdam quotations, the unpublished damping (K) factor, and the real band
 widths. A better fit needs the Rotterdam product quotations (for example from the monthly
 newsletter figures) or the technical annex.
+
+### Rotterdam product prices from the newsletter (2026-10-06)
+
+The newsletter quotes the wholesale product price in EUR per 1000 L, but only in 20 of its 119
+issues (22 June to 5 October, 18 for diesel and 14 for E10), so it is too sparse to refit the
+rules on: that covers about eight real diesel changes. It does show how good the stand-in is
+(`fuelprices calibrate` prints this):
+
+| | quotes | correlation with the stand-in | newsletter minus stand-in |
+|---|---|---|---|
+| diesel | 18 | 0.98 | +37 EUR/1000 L on average, spread 31 |
+| E10 | 14 | 0.2 | +60 EUR/1000 L on average, spread 44 |
+
+- Diesel: the New York ULSD future follows the quoted price closely, but the spread of about 31
+  EUR/1000 L (3 cent/L before VAT, around 3% of the cost) is as large as the band itself (1.5% to
+  3%). Day to day the stand-in is too noisy to tell whether the real band was left, which explains
+  the ~65% precision and ~40% recall. A daily series of the real quotation would remove this.
+- E10: the RBOB future does not track the quoted petrol price at all in this period (correlation
+  0.2), so the E10 fit cannot get good with this stand-in. Belgian petrol follows the Eurobob
+  quotation, which is a different contract.
+
+Conclusion: the fit does not reach the 70% bar and cannot with these inputs; predictions beyond
+tomorrow's published price stay a guess. Collecting the newsletter's product price on every issue
+(it appears about twice a week) would slowly build the missing series.

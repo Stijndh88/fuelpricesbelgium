@@ -68,6 +68,16 @@ def _calibrate(args: argparse.Namespace) -> None:
     finally:
         conn.close()
     print(calibrate.report(calibrations))
+    if args.newsletter and args.newsletter.exists():
+        conn = history.connect(args.db)
+        try:
+            print(
+                calibrate.report_stand_in(
+                    calibrate.stand_in_check(history.all_rows(conn), args.newsletter)
+                )
+            )
+        finally:
+            conn.close()
     if args.json:
         written = calibrate.save(args.json, calibrations)
         print(f"{'wrote' if written else 'unchanged'} {args.json}")
@@ -106,6 +116,12 @@ def main(argv: list[str] | None = None) -> None:
     cal = commands.add_parser("calibrate", help="fit the price-change rules to the stored history")
     cal.add_argument("--db", type=Path, default=history.DEFAULT_DB_PATH, help="SQLite history")
     cal.add_argument("--json", type=Path, help="also write the fit to this JSON file")
+    cal.add_argument(
+        "--newsletter",
+        type=Path,
+        default=Path("data/newsletter_predictions.csv"),
+        help="newsletter figures: also check the stand-in cost against its product prices",
+    )
     cal.set_defaults(handler=_calibrate)
 
     args = parser.parse_args(argv)
