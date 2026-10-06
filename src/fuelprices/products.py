@@ -20,9 +20,12 @@ class Product(Enum):
     E10 = ("e10", "Benzine 95 RON E10", ChangeRule.THRESHOLD)
     E5_98 = ("e5_98", "Benzine 98 RON E5", ChangeRule.THRESHOLD)
     DIESEL_B7 = ("diesel_b7", "Diesel B7", ChangeRule.THRESHOLD)
-    DIESEL_B10 = ("diesel_b10", "Diesel B10", ChangeRule.THRESHOLD)
-    LPG = ("lpg", "LPG", ChangeRule.THRESHOLD)
-    HEATING_OIL = ("heating_oil", "Gasolie verwarming", ChangeRule.DAILY)
+    HEATING_OIL = ("heating_oil", "Gasolie verwarming vanaf 2000 l", ChangeRule.DAILY)
+    HEATING_OIL_SMALL = (
+        "heating_oil_small",
+        "Gasolie verwarming minder dan 2000 l",
+        ChangeRule.DAILY,
+    )
 
     def __init__(self, code: str, label: str, change_rule: ChangeRule) -> None:
         self.code = code
@@ -47,10 +50,12 @@ def _normalise(text: str) -> str:
 _NAME_PATTERNS: list[tuple[re.Pattern[str], Product]] = [
     (re.compile(r"\b95\b.*\be10\b"), Product.E10),
     (re.compile(r"\b98\b.*\be5\b"), Product.E5_98),
-    (re.compile(r"\b(diesel|gasoil|gasolie)\b.*\bb10\b"), Product.DIESEL_B10),
-    (re.compile(r"\b(diesel|gasoil|gasolie)\b.*\bb7\b"), Product.DIESEL_B7),
-    (re.compile(r"\b(lpg|autogas)\b"), Product.LPG),
-    (re.compile(r"\b(verwarming|chauffage)\b"), Product.HEATING_OIL),
+    (re.compile(r"\bdiesel b7\b"), Product.DIESEL_B7),
+    (
+        re.compile(r"\b(verwarming|chauffage)\b.*\b(minder dan|moins de) 2000\b"),
+        Product.HEATING_OIL_SMALL,
+    ),
+    (re.compile(r"\b(verwarming|chauffage)\b.*\b(vanaf|a partir de) 2000\b"), Product.HEATING_OIL),
 ]
 
 

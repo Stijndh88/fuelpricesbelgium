@@ -20,7 +20,7 @@ when it pays to wait (or hurry) to fill up.
 python -m pip install -e '.[dev]'
 pytest
 ruff check . && ruff format --check .
-fuelprices fetch            # needs access to economie.fgov.be
-fuelprices fetch --html tests/fixtures/fod_sample.html   # offline, from a saved page
+fuelprices fetch            # needs access to petrolprices.economie.fgov.be
+fuelprices fetch --html tests/fixtures/petrolprices_nl.html   # offline, from a saved page
 fuelprices show
 ```
