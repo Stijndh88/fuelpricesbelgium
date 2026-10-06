@@ -25,8 +25,8 @@ from secondary sources.
 ## Not confirmed yet
 
 - **Band widths.** `UNCONFIRMED_SCHEDULE` (3.0% narrowing to 1.5% over 7 days) is a placeholder
-  of the right shape. It has to be calibrated against the price history before predictions
-  depend on it.
+  of the right shape. `fuelprices calibrate` fits the widths to the real changes since 2019
+  (see "Calibration results" below); the fit is not good enough yet to rely on.
 - **Moving average days.** Coded as the last 7 working days; it could be calendar days.
 - **New base cost.** After a change the band is re-centred on that day's product cost; the
   annex may use the moving average instead.
@@ -34,3 +34,35 @@ from secondary sources.
 - **K-factor.** Energia mentions a damping factor in the formula; its effect is not modelled.
 - **Crisis measures.** A 2026 bill (Kamer doc 56 1452) lets the government freeze maximum
   prices for up to 6 months, overriding these rules while it applies.
+
+## Calibration results (2026-10-06)
+
+Daily maximum prices since 2011 come from petrolfed.be; the fit uses 2019 onwards (359 real
+diesel changes, 277 for E10). The product cost is stood in for by the New York ULSD/RBOB future in
+EUR/L, because the Rotterdam quotations are not free. `fuelprices calibrate` replays the rules with
+band widths from a grid and scores them against the real changes, fitting on everything before the
+last 180 days and testing on those 180 days.
+
+What the history shows (solid):
+
+- Changes take effect on Tuesday to Saturday (computed Monday to Friday) and never on Sunday.
+- There is no fixed minimum gap: 1 to 45+ days between changes, a median around a week, about 50
+  changes a year for diesel and 40 for E10.
+- Typical step 3 cent/L (median), 5 cent/L (75th percentile), up to 30 cent/L in crises.
+
+How well the replayed rules reproduce the real changes (the "exact day" figures need the right day
+and direction; "within a day" allows one day off):
+
+| | diesel B7 | E10 |
+|---|---|---|
+| Free-running replay, held-out half year: precision / recall | 65% / 39% | 41% / 27% |
+| Replay restarted from every real change, exact day, precision / recall | about 40% / 40-60% | about 40% / 55% |
+| Same, within a day, precision / recall | about 70% / 50-75% | about 70% / 60% |
+
+Conclusion: the rules with these band widths and the stand-in cost explain roughly half of the real
+changes and about a third of the changes they predict do not happen on that day. That is below the
+bar for the advice (precision and recall of at least 70% on days the fit never saw), so predictions
+beyond tomorrow's published price stay labelled as a guess. The most likely reasons: the stand-in
+cost differs from the Rotterdam quotations, the unpublished damping (K) factor, and the real band
+widths. A better fit needs the Rotterdam product quotations (for example from the monthly
+newsletter figures) or the technical annex.

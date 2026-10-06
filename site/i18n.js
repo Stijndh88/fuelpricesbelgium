@@ -67,11 +67,14 @@ const I18N = {
         "Brent {brent_from} to {brent_to} USD since {since}: inside the band, no change expected by {when}.",
       brent_wait: "Brent {brent_from} to {brent_to} USD since {since}: a drop is likely from {when}.",
       brent_fill: "Brent {brent_from} to {brent_to} USD since {since}: a rise is likely from {when}.",
+      brent_wait_guess: "Brent {brent_from} to {brent_to} USD since {since}: a drop is possible from {when} (a guess).",
+      brent_fill_guess: "Brent {brent_from} to {brent_to} USD since {since}: a rise is possible from {when} (a guess).",
     },
     caveats: {
       wholesale_proxy:
         "The wholesale diesel and petrol quotations that actually trigger a change are not free, so beyond tomorrow's published price the advice uses Brent crude as a rough stand-in.",
-      bands_placeholder: "The band widths of the price rules are placeholders until calibrated on the history.",
+      bands_fit:
+        "The exact band widths of the price rules are not public. They are fitted to the real price history; until the fit reproduces the real changes well enough on days it was not fitted on, predictions beyond tomorrow's published price are labelled a guess.",
       fx_fixed:
         "Brent and US futures are converted at a fixed EUR/USD rate. The diesel and gasoline futures are New York contracts, a stand-in for the Rotterdam quotations Belgium uses.",
       shock_prices_only: "The market shock flag looks at prices, not news: news only counts once markets move.",
@@ -139,12 +142,14 @@ const I18N = {
         "Brent van {brent_from} naar {brent_to} USD sinds {since}: binnen de band, geen wijziging verwacht tegen {when}.",
       brent_wait: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een daling is waarschijnlijk vanaf {when}.",
       brent_fill: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een stijging is waarschijnlijk vanaf {when}.",
+      brent_wait_guess: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een daling is mogelijk vanaf {when} (een gok).",
+      brent_fill_guess: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een stijging is mogelijk vanaf {when} (een gok).",
     },
     caveats: {
       wholesale_proxy:
         "De groothandelsnoteringen voor diesel en benzine die een prijswijziging echt aansturen zijn niet gratis, dus buiten de gepubliceerde prijs van morgen gebruikt het advies ruwe olie (Brent) als grove benadering.",
-      bands_placeholder:
-        "De breedtes van de prijsbanden uit de regels zijn voorlopige waarden tot ze op de historiek gekalibreerd zijn.",
+      bands_fit:
+        "De exacte breedtes van de prijsbanden uit de regels zijn niet openbaar. Ze worden gefit op de echte prijshistoriek; zolang de fit de echte wijzigingen op niet-gefitte dagen niet goed genoeg nabootst, zijn voorspellingen buiten de gepubliceerde prijs van morgen een gok.",
       fx_fixed:
         "Brent en Amerikaanse futures worden omgerekend tegen een vaste EUR/USD-koers. De diesel- en benzinefutures zijn New Yorkse contracten, een benadering van de Rotterdamse noteringen die België gebruikt.",
       shock_prices_only:

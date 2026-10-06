@@ -65,3 +65,31 @@ def test_missing_topic_skips_and_dry_run_prints(tmp_path, monkeypatch):
     cur = write(tmp_path / "c.json", advice())
     assert "not set" in notify.run(cur, None, "", False, False)
     assert "Dry run" in notify.run(cur, None, "", False, True)
+
+
+def test_message_is_dutch_then_english_from_the_codes():
+    data = {
+        "advice": [
+            {
+                "product": "diesel_b7",
+                "label": "Diesel B7",
+                "action": "wait",
+                "headline": "Wait",
+                "reason": "English text",
+                "reason_code": "wait_published",
+                "reason_params": {
+                    "day": "2026-10-07",
+                    "cents": 4.0,
+                    "today": 2.432,
+                    "tomorrow": 2.392,
+                },
+            }
+        ]
+    }
+    title, body = notify.build_message(data)
+    assert title == "Tankadvies: Diesel B7: Wacht"
+    dutch, english = body.split("\n\n")
+    assert "Wacht tot morgen (wo 07/10): de maximumprijs daalt 4.0 cent/L" in dutch
+    assert "Wait until tomorrow (Wed 07/10): the maximum price drops 4.0 cent/L" in english
+    _, only_english = notify.build_message(data, ("en",))
+    assert "\n\n" not in only_english
