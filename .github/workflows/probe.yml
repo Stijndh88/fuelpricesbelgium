@@ -6,14 +6,19 @@ jobs:
     steps:
       - run: |
           B=https://petrolfed.be
-          curl -sS -L -m 30 -A fb -o /tmp/evo.js "$B/modules/custom/dms_maximumprijs_export/js/evolutie-chart.js"
-          echo "== evolutie-chart.js size $(wc -c </tmp/evo.js)"
-          grep -n -i -E "getData|fetch|url|ajax|\.get\(|json|api|endpoint|/nl/|/export|XMLHttp|http" /tmp/evo.js | cut -c1-300 | head -40
-          echo "== getData body"
+          curl -sS -L -m 60 -A fb -o /tmp/all.json -w "HTTP %{http_code} %{content_type} %{size_download}B\n" "$B/nl/dms_maximumprijs_export/all/2025-01-01/2026-10-07"
           python3 - <<'PY'
-          s=open('/tmp/evo.js',encoding='utf-8',errors='ignore').read()
-          i=s.find('function getData')
-          print(s[i:i+2500] if i>=0 else 'no function getData')
+          import json
+          d=json.load(open('/tmp/all.json'))
+          print(type(d).__name__, (list(d.keys())[:20] if isinstance(d,dict) else len(d)))
+          def show(x,depth=0,maxd=3):
+              pad='  '*depth
+              if isinstance(x,dict):
+                  for k,v in list(x.items())[:8]:
+                      print(pad+str(k)+':',type(v).__name__, (len(v) if hasattr(v,'__len__') else v))
+                      if depth<maxd: show(v,depth+1,maxd)
+              elif isinstance(x,list):
+                  print(pad+'[0]=',json.dumps(x[0])[:300] if x else '')
+                  print(pad+'[-1]=',json.dumps(x[-1])[:300] if x else '')
+          show(d)
           PY
-          echo "== other module js"
-          curl -sS -L -m 30 -A fb "$B/nl/maximumprijzen/databank" | grep -o '/modules/custom/dms_maximumprijs_export/js/[^"?]*' | sort -u
