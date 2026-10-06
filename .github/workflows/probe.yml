@@ -6,19 +6,13 @@ jobs:
     steps:
       - run: |
           B=https://petrolfed.be
-          curl -sS -L -m 60 -A fb -o /tmp/all.json -w "HTTP %{http_code} %{content_type} %{size_download}B\n" "$B/nl/dms_maximumprijs_export/all/2025-01-01/2026-10-07"
+          curl -sS -L -m 60 -A fb -o /tmp/all.json "$B/nl/dms_maximumprijs_export/all/2011-01-01/2026-10-07"
           python3 - <<'PY'
           import json
           d=json.load(open('/tmp/all.json'))
-          print(type(d).__name__, (list(d.keys())[:20] if isinstance(d,dict) else len(d)))
-          def show(x,depth=0,maxd=3):
-              pad='  '*depth
-              if isinstance(x,dict):
-                  for k,v in list(x.items())[:8]:
-                      print(pad+str(k)+':',type(v).__name__, (len(v) if hasattr(v,'__len__') else v))
-                      if depth<maxd: show(v,depth+1,maxd)
-              elif isinstance(x,list):
-                  print(pad+'[0]=',json.dumps(x[0])[:300] if x else '')
-                  print(pad+'[-1]=',json.dumps(x[-1])[:300] if x else '')
-          show(d)
+          for i,x in enumerate(d):
+              data=x.get('data',{})
+              ks=sorted(data)
+              meta={k:v for k,v in x.items() if k!='data'}
+              print(i,json.dumps(meta,ensure_ascii=False)[:200],len(ks),ks[0] if ks else None,ks[-1] if ks else None,data[ks[-1]] if ks else None)
           PY
