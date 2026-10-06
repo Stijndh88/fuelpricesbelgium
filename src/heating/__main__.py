@@ -16,6 +16,56 @@ from pathlib import Path
 from heating import config, model, tariffs, weather
 
 
+def private_report(
+    settings: config.Settings,
+    tariff: tariffs.Tariff,
+    temps: dict[date, float],
+    today: date,
+) -> str:
+    """The advice without any figure that reveals personal values (for public logs).
+
+    Leaves out prices, boiler, gas use, location, kWh and euro amounts, and the break-even COP
+    (it gives away the price ratio). Only the verdict remains: the switch temperature and which
+    option is cheaper each day.
+    """
+    prices = tariff.prices
+    switch = settings.cop_curve.temperature_for(
+        model.break_even_cop(prices, settings.boiler_efficiency)
+    )
+    if switch is not None:
+        verdict = f"the heat pumps are cheaper when the daily mean is above **{switch:.1f} °C**"
+    elif (
+        model.break_even_cop(prices, settings.boiler_efficiency) <= settings.cop_curve.points[0][1]
+    ):
+        verdict = "the heat pumps are cheaper at every temperature"
+    else:
+        verdict = "gas is cheaper at every temperature"
+    lines = [
+        f"## Heating: gas or heat pump ({today})",
+        "",
+        "Calculated with personal values kept out of this page; run locally with `--show-private`"
+        " for prices and euro amounts.",
+        "",
+        f"- With your prices and your units, {verdict}.",
+    ]
+    days = sorted(d for d in temps if d >= today)
+    if days:
+        lines += ["", "| day | mean temp °C | cheaper |", "|---|---:|---|"]
+        for day in days:
+            cost = model.day_cost(
+                temps[day],
+                prices,
+                settings.cop_curve,
+                settings.boiler_efficiency,
+                settings.loss_kwh_per_degree_day,
+                settings.base_temp,
+                settings.heat_pumps.capacity_kw(temps[day]) if settings.capacity_known else None,
+            )
+            cheaper = cost.cheaper if cost.heat_kwh else "no heating needed"
+            lines.append(f"| {day:%a %d/%m} | {cost.outdoor_temp:.1f} | {cheaper} |")
+    return "\n".join(lines) + "\n"
+
+
 def report(
     settings: config.Settings,
     tariff: tariffs.Tariff,
@@ -98,17 +148,27 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--electricity-price", type=float, help="all-in EUR/kWh, overrides")
     parser.add_argument("--weather-json", type=Path, help="saved Open-Meteo response")
     parser.add_argument("--day", type=date.fromisoformat, default=date.today())
+    parser.add_argument(
+        "--show-private",
+        action="store_true",
+        help="print prices and euro amounts even when personal values come from the environment",
+    )
     args = parser.parse_args(argv)
 
-    settings = config.load(args.config)
+    settings = config.with_env(config.load(args.config))
+    private = config.uses_private_values() and not args.show_private
     tariff = tariffs.for_day(tariffs.load(args.tariffs), args.day)
-    if args.gas_price or args.electricity_price:
+    gas_price = args.gas_price or config.env_value(config.ENV_GAS_PRICE)
+    electricity_price = args.electricity_price or config.env_value(config.ENV_ELECTRICITY_PRICE)
+    if gas_price or electricity_price:
         prices = replace(
             tariff.prices,
-            gas=args.gas_price or tariff.prices.gas,
-            electricity=args.electricity_price or tariff.prices.electricity,
+            gas=gas_price or tariff.prices.gas,
+            electricity=electricity_price or tariff.prices.electricity,
         )
-        tariff = replace(tariff, prices=prices, source="scenario from the command line")
+        from_cli = args.gas_price or args.electricity_price
+        source = "scenario from the command line" if from_cli else "your own prices (environment)"
+        tariff = replace(tariff, prices=prices, source=source)
 
     if args.weather_json:
         temps = weather.parse(args.weather_json.read_text(encoding="utf-8"))
@@ -116,9 +176,13 @@ def main(argv: list[str] | None = None) -> int:
         try:
             temps = weather.fetch_daily_means(settings.latitude, settings.longitude)
         except OSError as e:
-            print(f"(no weather forecast: {e})", file=sys.stderr)
+            # The error text can name the request, which holds the location.
+            print(
+                f"(no weather forecast: {e if not private else type(e).__name__})", file=sys.stderr
+            )
             temps = {}
-    sys.stdout.write(report(settings, tariff, temps, args.day))
+    write = private_report if private else report
+    sys.stdout.write(write(settings, tariff, temps, args.day))
     return 0
 
 

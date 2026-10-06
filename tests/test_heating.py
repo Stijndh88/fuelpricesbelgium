@@ -128,3 +128,54 @@ def test_repo_config_has_the_samsung_units():
     settings = config.load()
     assert [u.name.split()[1] for u in settings.heat_pumps.units] == ["AJ040", "AJ068"]
     assert model.seasonal_cop(settings.cop_curve) == pytest.approx(settings.heat_pumps.scop)
+
+
+SECRETS = {
+    "HEATING_LATITUDE": "51.2345",
+    "HEATING_LONGITUDE": "4.4321",
+    "HEATING_GAS_EUR_PER_KWH": "0.0987",
+    "HEATING_ELECTRICITY_EUR_PER_KWH": "0.2876",
+    "HEATING_ANNUAL_GAS_KWH": "23456",
+    "HEATING_BOILER_EFFICIENCY": "0,87",
+}
+
+
+def test_env_overrides_settings_and_ignores_empty_values():
+    env = {**SECRETS, "HEATING_HOT_WATER_SHARE": ""}  # unset secrets arrive as empty strings
+    settings = config.with_env(config.load(), env)
+    assert (settings.latitude, settings.longitude) == (51.2345, 4.4321)
+    assert settings.annual_gas_kwh == 23456
+    assert settings.boiler_efficiency == pytest.approx(0.87)
+    assert settings.hot_water_share == config.Settings().hot_water_share
+    assert config.uses_private_values(env)
+    assert not config.uses_private_values({"HEATING_LATITUDE": ""})
+
+
+def test_env_error_does_not_echo_the_value():
+    with pytest.raises(ValueError) as e:
+        config.env_value("HEATING_LATITUDE", {"HEATING_LATITUDE": "51.2345N"})
+    assert "51.2345" not in str(e.value)
+
+
+def run_cli(monkeypatch, capsys, extra=()):
+    for name in config.PRIVATE_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+    for name, value in SECRETS.items():
+        monkeypatch.setenv(name, value)
+    cli.main(
+        ["--weather-json", str(FIXTURES / "open_meteo_sample.json"), "--day", "2026-10-06", *extra]
+    )
+    return capsys.readouterr().out
+
+
+def test_report_hides_private_values_when_env_is_used(monkeypatch, capsys):
+    out = run_cli(monkeypatch, capsys)
+    assert "| day | mean temp °C | cheaper |" in out
+    for private in ("0.0987", "0.2876", "23456", "51.2345", "4.4321", "87%", "EUR", "kWh", "COP"):
+        assert private not in out
+
+
+def test_show_private_prints_the_full_report(monkeypatch, capsys):
+    out = run_cli(monkeypatch, capsys, ["--show-private"])
+    assert "0.0987" in out and "your own prices (environment)" in out
+    assert "heat pump EUR" in out
