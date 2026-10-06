@@ -13,7 +13,10 @@ jobs:
             "https://www.eia.gov/dnav/pet/hist_xls/RBRTEd.xls"; do
             for agent in "fuelpricesbelgium" "$UA"; do
               echo "== $u [$agent]"
-              curl -sS -m 40 -A "$agent" -o out.txt -w "%{http_code} %{size_download}B %{time_total}s\n" "$u" || true
-              head -c 300 out.txt; echo
+              for v in --http1.1 --http2; do
+                rm -f out.txt
+                curl -sS $v -m 40 -A "$agent" -o out.txt -w "$v %{http_code} %{size_download}B %{time_total}s\n" "$u" || true
+                head -c 200 out.txt 2>/dev/null || true; echo
+              done
             done
           done
