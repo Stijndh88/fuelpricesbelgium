@@ -11,28 +11,34 @@
 <body>
 <main class="viz-root">
   <header>
-    <h1>Fuel prices Belgium</h1>
-    <p class="muted" id="updated">Loading prices…</p>
+    <div class="head-row">
+      <h1 data-i18n="title">Fuel prices Belgium</h1>
+      <div class="range" role="group" data-i18n-label="language" aria-label="Language" id="lang">
+        <button type="button" data-lang="nl" lang="nl">NL</button>
+        <button type="button" data-lang="en" lang="en">EN</button>
+      </div>
+    </div>
+    <p class="muted" id="updated" data-i18n="loading">Loading prices…</p>
   </header>
 
   <section aria-labelledby="advice-title" class="card">
-    <h2 id="advice-title">Refuel advice</h2>
-    <div id="advice" class="advice"><p class="muted">Advice is not available yet. It will appear here once the daily job starts publishing it.</p></div>
+    <h2 id="advice-title" data-i18n="advice_title">Refuel advice</h2>
+    <div id="advice" class="advice"><p class="muted" data-i18n="advice_placeholder">Advice is not available yet. It will appear here once the daily job starts publishing it.</p></div>
   </section>
 
-  <section aria-labelledby="now-title">
-    <h2 id="now-title" class="visually-hidden">Prices today and tomorrow</h2>
+  <section>
+    
     <div class="tiles" id="tiles"></div>
   </section>
 
   <section aria-labelledby="history-title" class="card">
     <div class="card-head">
-      <h2 id="history-title">Maximum price, EUR per litre</h2>
-      <div class="range" role="group" aria-label="Time range" id="range">
-        <button type="button" data-days="30">30d</button>
-        <button type="button" data-days="90" aria-pressed="true">90d</button>
-        <button type="button" data-days="365">1y</button>
-        <button type="button" data-days="0">All</button>
+      <h2 id="history-title" data-i18n="history_title">Maximum price, EUR per litre</h2>
+      <div class="range" role="group" data-i18n-label="range" aria-label="Time range" id="range">
+        <button type="button" data-days="30"><span data-i18n="d30">30d</span></button>
+        <button type="button" data-days="90" aria-pressed="true"><span data-i18n="d90">90d</span></button>
+        <button type="button" data-days="365"><span data-i18n="d365">1y</span></button>
+        <button type="button" data-days="0"><span data-i18n="dall">All</span></button>
       </div>
     </div>
     <div class="legend" id="price-legend"></div>
@@ -40,23 +46,24 @@
   </section>
 
   <section aria-labelledby="brent-title" class="card">
-    <h2 id="brent-title">Brent crude, USD per barrel</h2>
+    <h2 id="brent-title" data-i18n="brent_title">Brent crude, USD per barrel</h2>
     <div class="chart chart-small" id="brent-chart"></div>
   </section>
 
   <section class="card">
     <details>
-      <summary>Show the numbers</summary>
-      <div class="table-wrap"><table id="table"><thead><tr><th>Day</th><th>Diesel B7</th><th>E10</th><th>Brent</th></tr></thead><tbody></tbody></table></div>
+      <summary data-i18n="show_numbers">Show the numbers</summary>
+      <div class="table-wrap"><table id="table"><thead><tr><th data-i18n="col_day">Day</th><th>Diesel B7</th><th>E10</th><th>Brent</th></tr></thead><tbody></tbody></table></div>
     </details>
   </section>
 
   <footer class="muted">
-    Official maximum prices (incl. VAT) from FOD Economie. Brent spot price from FRED (EIA), a few working days behind.
-    <a href="https://github.com/Stijndh88/fuelpricesbelgium">Source</a>
+    <span data-i18n="footer">Official maximum prices (incl. VAT) from FOD Economie. Brent spot price from FRED (EIA), a few working days behind.</span>
+    <a href="https://github.com/Stijndh88/fuelpricesbelgium" data-i18n="source">Source</a>
   </footer>
 </main>
 <div class="tooltip" id="tooltip" role="status" hidden></div>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
