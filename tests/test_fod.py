@@ -6,15 +6,21 @@ import pytest
 from fuelprices.products import Product
 from fuelprices.sources import fod
 
-SAMPLE = (Path(__file__).parent / "fixtures" / "fod_sample.html").read_text(encoding="utf-8")
+FIXTURES = Path(__file__).parent / "fixtures"
+SAMPLE = (FIXTURES / "petrolprices_nl.html").read_text(encoding="utf-8")
 
 
-def test_parse_sample_page():
-    records = {r.product: r for r in fod.parse(SAMPLE)}
-    assert set(records) == set(Product)
-    assert records[Product.DIESEL_B7].price_eur_per_litre == 2.392
-    assert records[Product.E10].price_eur_per_litre == 2.065
-    assert records[Product.LPG].price_eur_per_litre == 0.861
+@pytest.mark.parametrize("locale", ["nl", "fr"])
+def test_parse_live_page_copy(locale):
+    html = (FIXTURES / f"petrolprices_{locale}.html").read_text(encoding="utf-8")
+    records = {r.product: r for r in fod.parse(html)}
+    assert {p: r.price_eur_per_litre for p, r in records.items()} == {
+        Product.E10: 2.065,
+        Product.E5_98: 2.259,
+        Product.DIESEL_B7: 2.392,
+        Product.HEATING_OIL: 1.483,
+        Product.HEATING_OIL_SMALL: 1.5261,
+    }
     assert all(r.valid_from == date(2026, 10, 7) for r in records.values())
     assert all(r.source == "fod-economie" for r in records.values())
 
