@@ -104,3 +104,23 @@ def test_calibration_json_round_trip(tmp_path):
     assert calibrate.load(path) == result
     assert json.loads(path.read_text())["diesel_b7"]["trusted"] is True
     assert calibrate.load(tmp_path / "missing.json") == {}
+
+
+def test_stand_in_check_compares_with_newsletter_quotes(tmp_path):
+    start = date(2026, 6, 1)
+    rows = [
+        DailyPrices(day=start + timedelta(days=i), ulsd_usd_gal=3.0 + 0.1 * i, eur_usd=1.0)
+        for i in range(10)
+    ]
+    cost = lambda i: (3.0 + 0.1 * i) / calibrate.LITRES_PER_GALLON * 1000  # noqa: E731
+    path = tmp_path / "n.csv"
+    lines = ["date,diesel_product_eur_per_1000l,e10_product_eur_per_1000l"]
+    for i in (1, 4, 8):
+        lines.append(f"{(start + timedelta(days=i)).isoformat()},{cost(i) + 30:.0f},")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    check = calibrate.stand_in_check(rows, path)
+    assert check["diesel_b7"].points == 3
+    assert check["diesel_b7"].correlation == 1.0
+    assert check["diesel_b7"].mean_gap == 30
+    assert check["e10"].points == 0
+    assert "too few" in calibrate.report_stand_in(check)

@@ -9,6 +9,7 @@ the held-out score clears :data:`TRUST_MIN_PRECISION` and :data:`TRUST_MIN_RECAL
 
 from __future__ import annotations
 
+import csv
 import json
 import statistics
 from collections.abc import Iterable, Sequence
@@ -290,8 +291,73 @@ def calibrate_product(
     )
 
 
+@dataclass(frozen=True)
+class StandInCheck:
+    """How closely the stand-in cost follows the product prices quoted in the newsletter."""
+
+    product: str
+    points: int
+    correlation: float | None
+    mean_gap: float | None  # newsletter minus stand-in, EUR per 1000 L
+    gap_sd: float | None
+
+
+NEWSLETTER_COLUMNS = {
+    Product.DIESEL_B7: "diesel_product_eur_per_1000l",
+    Product.E10: "e10_product_eur_per_1000l",
+}
+
+
+def stand_in_check(rows: Sequence[DailyPrices], newsletter: Path) -> dict[str, StandInCheck]:
+    """Compare the stand-in product cost with the Rotterdam prices quoted in the newsletter.
+
+    The newsletter gives a wholesale price (EUR per 1000 L) in only some issues, so this is a
+    check of the stand-in, not a series to fit on.
+    """
+    with newsletter.open(encoding="utf-8", newline="") as handle:
+        issues = list(csv.DictReader(handle))
+    result = {}
+    for product, column in NEWSLETTER_COLUMNS.items():
+        series = build_series(rows, product)
+        cost_on = dict(zip(series.days, series.costs, strict=True))
+        quoted, proxy = [], []
+        for issue in issues:
+            if not issue.get(column):
+                continue
+            day = date.fromisoformat(issue["date"])
+            known = [d for d in cost_on if d <= day]
+            if known:
+                quoted.append(float(issue[column]))
+                proxy.append(cost_on[max(known)] * 1000)
+        gaps = [q - p for q, p in zip(quoted, proxy, strict=True)]
+        corr = None
+        if len(quoted) >= 3 and statistics.pstdev(quoted) and statistics.pstdev(proxy):
+            corr = round(statistics.correlation(quoted, proxy), 2)
+        result[product.code] = StandInCheck(
+            product.code,
+            len(quoted),
+            corr,
+            round(statistics.mean(gaps)) if gaps else None,
+            round(statistics.pstdev(gaps)) if gaps else None,
+        )
+    return result
+
+
 def calibrate_all(rows: Sequence[DailyPrices]) -> dict[str, Calibration]:
     return {p.code: calibrate_product(p, rows) for p in SERIES_COLUMNS}
+
+
+def report_stand_in(checks: dict[str, StandInCheck]) -> str:
+    lines = ["Stand-in cost against the product prices quoted in the newsletter:"]
+    for c in checks.values():
+        if c.points < 3:
+            lines.append(f"  {c.product}: only {c.points} quoted prices, too few to compare")
+            continue
+        lines.append(
+            f"  {c.product}: {c.points} quotes, correlation {c.correlation}, newsletter minus "
+            f"stand-in {c.mean_gap:+} EUR/1000 L on average (spread {c.gap_sd})"
+        )
+    return "\n".join(lines)
 
 
 def to_json(calibrations: dict[str, Calibration]) -> str:
