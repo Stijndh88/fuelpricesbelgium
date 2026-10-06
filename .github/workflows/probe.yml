@@ -5,26 +5,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          get() { curl -sS -L -m 30 -A "fuelpricesbelgium" -o "$2" -w "$1 HTTP %{http_code} %{content_type} %{size_download}B\n" "$1" || true; }
-          get "https://petrolfed.be/nl/maximumprijzen" /tmp/pf.html
-          echo "-- petrolfed links"; grep -o -i 'href="[^"]*"' /tmp/pf.html | grep -i -E 'xls|csv|json|download|files|prijs|evolut|histor|chart|data' | sort -u | head -40
-          echo "-- petrolfed text"; python3 - <<'PY'
+          curl -sS -L -m 30 -A "fuelpricesbelgium" -o /tmp/pf.html "https://petrolfed.be/nl/maximumprijzen"
+          python3 - <<'PY'
           import re,html
-          t=open('/tmp/pf.html',encoding='utf-8',errors='ignore').read()
-          t=re.sub(r'<script.*?</script>|<style.*?</style>','',t,flags=re.S)
-          t=html.unescape(re.sub(r'<[^>]+>','\n',t))
-          lines=[l.strip() for l in t.splitlines() if l.strip()]
-          i=[n for n,l in enumerate(lines) if 'maximumprij' in l.lower()]
-          print('\n'.join(lines[i[0]:i[0]+60]) if i else '\n'.join(lines[:60]))
+          raw=open('/tmp/pf.html',encoding='utf-8',errors='ignore').read()
+          print("len",len(raw))
+          print("-- script srcs"); print('\n'.join(sorted(set(re.findall(r'<script[^>]+src="([^"]+)"',raw)))[:30]))
+          print("-- drupalSettings / data attrs")
+          for m in re.finditer(r'(drupalSettings|data-chart|data-series|data-url|data-src|data-json|csv|xlsx|\.json)',raw):
+              s=max(0,m.start()-80); print(raw[s:m.end()+200].replace('\n',' ')); print('..')
+              if m.start()>len(raw): break
           PY
-          get "https://statbel.fgov.be/en/themes/energy/petrol-prices" /tmp/sb.html
-          echo "-- statbel links"; grep -o -i 'href="[^"]*"' /tmp/sb.html | grep -i -E 'xls|csv|json|download|files|opendata|open-data|bestat|petrol|fuel|price' | sort -u | head -40
-          echo "-- statbel text"; python3 - <<'PY'
-          import re,html
-          t=open('/tmp/sb.html',encoding='utf-8',errors='ignore').read()
-          t=re.sub(r'<script.*?</script>|<style.*?</style>','',t,flags=re.S)
-          t=html.unescape(re.sub(r'<[^>]+>','\n',t))
-          lines=[l.strip() for l in t.splitlines() if l.strip()]
-          i=[n for n,l in enumerate(lines) if 'petrol' in l.lower()]
-          print('\n'.join(lines[i[0]:i[0]+60]) if i else '\n'.join(lines[:60]))
+          echo "-- Databank/Evolutie html"
+          python3 - <<'PY'
+          import re
+          raw=open('/tmp/pf.html',encoding='utf-8',errors='ignore').read()
+          for key in ['Databank','Evolutie']:
+              for m in list(re.finditer(key,raw))[:4]:
+                  print(key,'@',m.start(),raw[max(0,m.start()-300):m.start()+700].replace('\n',' ')); print('=====')
           PY
