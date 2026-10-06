@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     e10_max        REAL,              -- official max price petrol E10 (95), EUR/L incl. VAT
     diesel_product REAL,              -- wholesale product cost diesel, EUR/L (rules input)
     e10_product    REAL,              -- wholesale product cost petrol, EUR/L (rules input)
-    brent_usd      REAL,              -- Brent crude spot, USD per barrel
+    brent_usd      REAL,              -- Brent crude front-month future close, USD per barrel
     updated_at     TEXT NOT NULL      -- UTC timestamp of the last write to this row
 );
 """
