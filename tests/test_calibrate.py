@@ -124,3 +124,28 @@ def test_stand_in_check_compares_with_newsletter_quotes(tmp_path):
     assert check["diesel_b7"].mean_gap == 30
     assert check["e10"].points == 0
     assert "too few" in calibrate.report_stand_in(check)
+
+
+def test_diesel_uses_the_official_gasoil_cost_when_the_history_has_it():
+    start = date(2024, 1, 1)
+    rows = []
+    for i in range(900):
+        day = start + timedelta(days=i)
+        cost = 0.60 + 0.0001 * i  # ex VAT, EUR/L
+        rows.append(
+            DailyPrices(
+                day=day,
+                diesel_max=2.0,
+                # valid on day D+1, computed on day D from the cost of D (the stand-in is 1 behind)
+                heating_oil_max=(cost + 0.15 + 0.0001) * 1.21,
+                ulsd_usd_gal=(cost + 0.01) * 3.78541,
+                eur_usd=1.0,
+            )
+        )
+    series = calibrate.build_series(rows, Product.DIESEL_B7)
+    assert series.cost_source == calibrate.OFFICIAL_COST
+    assert all(d.weekday() < 5 for d in series.days)
+    assert series.costs[0] > 0.5
+    # without enough heating oil history the stand-in is used
+    short = calibrate.build_series(rows[:100], Product.DIESEL_B7)
+    assert short.cost_source == calibrate.STAND_IN

@@ -90,3 +90,42 @@ rules on: that covers about eight real diesel changes. It does show how good the
 Conclusion: the fit does not reach the 70% bar and cannot with these inputs; predictions beyond
 tomorrow's published price stay a guess. Collecting the newsletter's product price on every issue
 (it appears about twice a week) would slowly build the missing series.
+
+### The official gasoil cost: heating oil max price (2026-10-06)
+
+Searched for a free daily Rotterdam gasoil quotation: Platts (the quotation the formula uses) is a
+paid subscription; ICE settlements and Eurobob need a data licence (the free delayed-data
+endpoints answer 403); Yahoo Finance has no ICE gasoil or Eurobob symbol; the EU Weekly Oil
+Bulletin is weekly and holds consumer prices; FOD Economie, Energia and carbu.com only publish the
+resulting max prices. What is public and official is the max price of heating oil
+(H0/H7, 2000 L and up): it has no band since 2018 and follows the same gasoil cost every day. The
+daily series (petrolfed.be, same export as the diesel max price, 2011 onwards) is the gasoil cost
+the Belgian formula produced, up to a constant (margin, duties, contributions).
+
+Checks on that series:
+
+- It changes on 251 of about 260 working days a year, never on Sunday, with the same big moves as
+  diesel (for example 10 April 2026, -26 cent/L both).
+- The price valid on day D+1 is computed on day D. The New York diesel future follows it with
+  one more day of delay: daily changes correlate 0.71 at that lag and about 0.05 without.
+- On the 345 real diesel changes since mid-2019, the diesel step divided by the move of the
+  heating oil cost since the previous change has median 0.97 (middle half 0.87 to 1.12). So a
+  diesel change passes on about 100% of the cost move measured on the day it happens, not on a
+  7-day average (that ratio scatters from -3 to 4). The expected size of a change is reliable.
+
+Fit of the band rules on diesel with this cost (fit on everything before the last 180 days,
+tested on those 180 days, 38 real changes):
+
+| | precision | recall |
+|---|---|---|
+| New York stand-in (before) | 65% | 39% |
+| official gasoil cost, free-running replay | 73% | 63% |
+| official gasoil cost, restarted from each real change | 75-78% | 55-79% |
+
+Direction is right in 98% of the changes that happen, and precision now clears 70%, but recall
+does not, and on the fit period (2019 to April 2026, 315 changes) precision is only about 50%.
+So the model still misses part of the real mechanism (the unpublished annex: exact band widths,
+how the moving average enters, minimum days between changes). Diesel predictions beyond tomorrow's
+published price therefore stay a guess, a much better informed one. E10 has no such series: petrol
+has no band-free sibling, so it stays on the RBOB stand-in (correlation 0.2 with the quoted
+price) and stays a guess.
