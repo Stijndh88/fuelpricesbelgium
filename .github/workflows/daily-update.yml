@@ -29,6 +29,8 @@ jobs:
         run: curl -sSfL -A "fuelpricesbelgium" -o page.html "$(python -c 'from fuelprices.sources import fod; print(fod.URL)')"
       - name: Update the price history
         run: python -m fuelprices.update --db data/prices.sqlite --html page.html
+      - name: Keep the previous advice for the notification
+        run: if [ -f data/advice.json ]; then cp data/advice.json "$RUNNER_TEMP/advice-previous.json"; fi
       - name: Write the refuel advice
         run: fuelprices advise --db data/prices.sqlite --json data/advice.json
       - name: Commit the price history
@@ -44,6 +46,14 @@ jobs:
           # main may have moved while the job ran; replay this commit on top before pushing.
           git pull --rebase origin main
           git push
+      # Needs the repository secret NTFY_TOPIC (a long random name); skipped quietly without it.
+      # Sends only when the advice changed; set the variable NTFY_DAILY to 1 for a daily summary.
+      - name: Notify subscribers
+        continue-on-error: true
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          NTFY_DAILY: ${{ vars.NTFY_DAILY }}
+        run: python -m fuelprices.notify --previous "$RUNNER_TEMP/advice-previous.json"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:

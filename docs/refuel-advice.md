@@ -49,3 +49,12 @@ least 0.1 cent/L, made no difference, or cost money, and the average saving. It 
 the shock flag off and once at the configured threshold, so the JSON shows whether the flag
 helps; try other thresholds with `fuelprices advise --shock-threshold 0.03`. The history only
 started on 7 October 2026, so it reports "not enough history" until a week of prices is stored.
+
+## Notifications
+
+The daily workflow can push the advice to a [ntfy](https://ntfy.sh) topic; anyone subscribes in
+the ntfy app or on ntfy.sh with the topic name, no account needed. Set the repository secret
+`NTFY_TOPIC` to a long random name (the repo is public, so keep it secret). Without it the step
+is skipped. A message goes out only when the action for diesel B7 or E10 changed; set the
+repository variable `NTFY_DAILY` to `1` for a summary every run. Try it locally with
+`python -m fuelprices.notify --dry-run`.
