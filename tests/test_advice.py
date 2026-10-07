@@ -295,3 +295,23 @@ def test_small_gasoil_cost_move_stays_in_band():
     a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
     assert a.action == advice.NO_DIFFERENCE
     assert a.reason_code == "gasoil_inside_band"
+
+
+def test_gasoil_cost_fall_beats_an_opposite_diesel_futures_shock():
+    rows, today = _gasoil_rows(1.4227)
+    rows = [DailyPrices(day=MON - timedelta(days=3), ulsd_usd_gal=4.50, eur_usd=1.12)] + [
+        DailyPrices(
+            day=r.day,
+            diesel_max=r.diesel_max,
+            e10_max=r.e10_max,
+            brent_usd=r.brent_usd,
+            heating_oil_max=r.heating_oil_max,
+            ulsd_usd_gal=4.50 if r.day < today else 4.80,
+            eur_usd=1.12,
+        )
+        for r in rows
+    ]
+    a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=0.05)
+    assert a.reason_code == "gasoil_wait_guess"
+    assert a.action == advice.WAIT
+    assert a.market_note is not None
