@@ -76,5 +76,4 @@ Dutch notice to reload (the English page may fall back to the English sentence).
 user-facing Dutch text must be Dutch; `tests/test_messages.py` scans the Dutch templates and the
 Dutch dashboard table for English words, so a new text without a proper Dutch version fails CI. The templates live in
 `src/fuelprices/messages.py`; a test checks both tables hold the same codes. The ntfy message is
-Dutch followed by English; set the repository variable `NTFY_LANGUAGES` (`en`, `nl` or `en,nl`) to
-change that.
+Dutch only; set the repository variable `NTFY_LANGUAGES` (`en`, `nl` or `nl,en`) to change that.
