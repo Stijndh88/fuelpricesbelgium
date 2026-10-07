@@ -4,7 +4,7 @@ Run by the daily workflow after the advice is written. The topic is the secret N
 repository is public, so the topic name must not be committed or printed. Without it, nothing
 is sent. By default a message goes out only when the action for diesel B7 or E10 changed
 compared with the previous data/advice.json; NTFY_DAILY=1 sends a summary every run. The text is
-Dutch followed by English; NTFY_LANGUAGES (for example "en" or "en,nl") changes that.
+Dutch only; NTFY_LANGUAGES (for example "en" or "nl,en") changes that.
 Only data/advice.json is used, never the private heating module.
 """
 
@@ -22,6 +22,9 @@ from fuelprices import messages
 DASHBOARD_URL = "https://stijndh88.github.io/fuelpricesbelgium/"
 SERVER = "https://ntfy.sh"
 PRODUCTS = ("diesel_b7", "e10")
+
+
+DEFAULT_LANGUAGES = ("nl",)  # Stijn reads everything in Dutch
 
 
 def _actions(advice: dict | None) -> dict[str, str]:
@@ -54,9 +57,7 @@ def _reason(item: dict, lang: str) -> str:
         return item["reason"]  # no code, or a code this version does not know: English text
 
 
-def build_message(
-    current: dict, languages: tuple[str, ...] = messages.LANGUAGES
-) -> tuple[str, str]:
+def build_message(current: dict, languages: tuple[str, ...] = DEFAULT_LANGUAGES) -> tuple[str, str]:
     """Return (title, body): headline per product in the first language, reasons in all of them."""
     items = [i for i in current.get("advice", []) if i.get("product") in PRODUCTS]
     title_prefix = {"nl": "Tankadvies", "en": "Refuel advice"}.get(languages[0], "Refuel advice")
@@ -91,7 +92,7 @@ def run(
     topic: str,
     daily: bool,
     dry_run: bool,
-    languages: tuple[str, ...] = messages.LANGUAGES,
+    languages: tuple[str, ...] = DEFAULT_LANGUAGES,
 ) -> str:
     """Decide and send; returns a short status line that is safe to log (no topic)."""
     if not current_path.exists():
@@ -120,7 +121,7 @@ def main(argv: list[str] | None = None) -> int:
     daily = os.environ.get("NTFY_DAILY", "") == "1"
     topic = os.environ.get("NTFY_TOPIC", "").strip()
     wanted = os.environ.get("NTFY_LANGUAGES", "").replace(" ", "").split(",")
-    languages = tuple(lang for lang in wanted if lang in messages.LANGUAGES) or messages.LANGUAGES
+    languages = tuple(lang for lang in wanted if lang in messages.LANGUAGES) or DEFAULT_LANGUAGES
     print(run(args.advice, args.previous, topic, daily, args.dry_run, languages))
     return 0
 

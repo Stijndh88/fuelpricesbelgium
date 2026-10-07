@@ -114,7 +114,7 @@ function adviceParams(params = {}) {
     else if (key === "since") out[key] = fmtShortDay(value);
     else if (key === "pct") out[key] = (value > 0 ? "+" : "") + num(value, 1) + "%";
     else if (key === "name") out[key] = hasText("market_names." + value) ? t("market_names." + value) : value;
-    else if (["today", "tomorrow"].includes(key)) out[key] = num(value, 3);
+    else if (["today", "tomorrow", "cost_from", "cost_to"].includes(key)) out[key] = num(value, 3);
     else if (key === "cents") out[key] = num(value, 1);
     else if (typeof value === "number") out[key] = num(value, 0);
     else out[key] = value;
@@ -122,11 +122,13 @@ function adviceParams(params = {}) {
   return out;
 }
 
-// The advice text in the current language: from its code when the page knows it, otherwise
-// the English sentence the advice job wrote.
+// The advice text in the current language: from its code when the page knows it. The Dutch page
+// never shows the English sentence the advice job wrote (a stale page or an unknown code would
+// leak English), only a Dutch notice; the English page may fall back to it.
 function adviceText(codeKey, code, params, fallback) {
   const key = codeKey + "." + code;
-  return code && hasText(key) ? t(key, adviceParams(params)) : fallback;
+  if (code && hasText(key)) return t(key, adviceParams(params));
+  return lang === "nl" && fallback ? t("advice_unknown") : fallback;
 }
 
 function renderAdvice(data) {

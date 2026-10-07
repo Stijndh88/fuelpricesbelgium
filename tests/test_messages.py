@@ -40,3 +40,46 @@ def test_dashboard_table_has_every_code_in_both_languages():
     table = (Path(__file__).parent.parent / "site" / "i18n.js").read_text(encoding="utf-8")
     for code in [*messages.REASONS["en"], *messages.CAVEATS]:
         assert table.count(f"\n      {code}:") == 2, code
+
+
+# Words that only occur in English texts. Dutch advice must never contain them: Stijn reads the
+# dashboard in Dutch, so every Dutch string comes from the templates checked here.
+ENGLISH_WORDS = {
+    "the", "to", "since", "from", "are", "a", "an", "and", "or", "wait", "fill",
+    "drop", "rise", "likely", "possible", "guess", "price", "prices", "cost", "official",
+    "inside", "expected", "change", "no", "difference", "tomorrow", "today", "by",
+    "market", "move", "big", "wholesale", "published", "until", "up", "for",
+}  # fmt: skip
+
+
+def _english_words(text):
+    import re
+
+    return sorted(set(re.findall(r"[a-z]+", re.sub(r"\{\w+\}", " ", text).lower())) & ENGLISH_WORDS)
+
+
+def test_dutch_templates_contain_no_english_words():
+    texts = {f"reasons.{c}": t for c, t in messages.REASONS["nl"].items()}
+    texts["market_note"] = messages.MARKET_NOTE["nl"]
+    texts.update({f"caveats.{c}": v["nl"] for c, v in messages.CAVEATS.items()})
+    texts.update({f"headlines.{c}": t for c, t in messages.HEADLINES["nl"].items()})
+    for key, text in texts.items():
+        assert not _english_words(text), (key, _english_words(text))
+
+
+def test_dutch_dashboard_table_contains_no_english_words():
+    import re
+    from pathlib import Path
+
+    table = (Path(__file__).parent.parent / "site" / "i18n.js").read_text(encoding="utf-8")
+    dutch = table[table.index("\n  nl: {") :]
+    # Product and market names are allowed to keep their English name (Brent, futures).
+    for text in re.findall(r':\s*"([^"\n]{12,})"', dutch):
+        assert not _english_words(text), (text, _english_words(text))
+
+
+def test_dutch_page_never_shows_the_english_advice_text():
+    from pathlib import Path
+
+    app = (Path(__file__).parent.parent / "site" / "app.js").read_text(encoding="utf-8")
+    assert 'lang === "nl" && fallback ? t("advice_unknown")' in app
