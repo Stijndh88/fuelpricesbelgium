@@ -69,6 +69,16 @@ const I18N = {
       brent_fill: "Brent {brent_from} to {brent_to} USD since {since}: a rise is likely from {when}.",
       brent_wait_guess: "Brent {brent_from} to {brent_to} USD since {since}: a drop is possible from {when} (a guess).",
       brent_fill_guess: "Brent {brent_from} to {brent_to} USD since {since}: a rise is possible from {when} (a guess).",
+      gasoil_inside_band:
+        "Official gasoil cost (heating oil max price) {cost_from} to {cost_to} EUR/L since {since}: inside the band, no change expected by {when}.",
+      gasoil_wait:
+        "Official gasoil cost (heating oil max price) {cost_from} to {cost_to} EUR/L since {since}: a drop is likely from {when}.",
+      gasoil_fill:
+        "Official gasoil cost (heating oil max price) {cost_from} to {cost_to} EUR/L since {since}: a rise is likely from {when}.",
+      gasoil_wait_guess:
+        "Official gasoil cost (heating oil max price) {cost_from} to {cost_to} EUR/L since {since}: a drop is possible from {when} (a guess).",
+      gasoil_fill_guess:
+        "Official gasoil cost (heating oil max price) {cost_from} to {cost_to} EUR/L since {since}: a rise is possible from {when} (a guess).",
     },
     caveats: {
       wholesale_proxy:
@@ -144,6 +154,16 @@ const I18N = {
       brent_fill: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een stijging is waarschijnlijk vanaf {when}.",
       brent_wait_guess: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een daling is mogelijk vanaf {when} (een gok).",
       brent_fill_guess: "Brent van {brent_from} naar {brent_to} USD sinds {since}: een stijging is mogelijk vanaf {when} (een gok).",
+      gasoil_inside_band:
+        "Officiële gasolie-kost (maxprijs stookolie) van {cost_from} naar {cost_to} EUR/L sinds {since}: binnen de band, geen wijziging verwacht tegen {when}.",
+      gasoil_wait:
+        "Officiële gasolie-kost (maxprijs stookolie) van {cost_from} naar {cost_to} EUR/L sinds {since}: een daling is waarschijnlijk vanaf {when}.",
+      gasoil_fill:
+        "Officiële gasolie-kost (maxprijs stookolie) van {cost_from} naar {cost_to} EUR/L sinds {since}: een stijging is waarschijnlijk vanaf {when}.",
+      gasoil_wait_guess:
+        "Officiële gasolie-kost (maxprijs stookolie) van {cost_from} naar {cost_to} EUR/L sinds {since}: een daling is mogelijk vanaf {when} (een gok).",
+      gasoil_fill_guess:
+        "Officiële gasolie-kost (maxprijs stookolie) van {cost_from} naar {cost_to} EUR/L sinds {since}: een stijging is mogelijk vanaf {when} (een gok).",
     },
     caveats: {
       wholesale_proxy:

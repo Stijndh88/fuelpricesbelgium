@@ -285,9 +285,51 @@ def advise(
             return make(WAIT, "shock_wait", params, big_move.eur_per_litre, "shock", next_change)
         return make(FILL_UP, "shock_fill", params, big_move.eur_per_litre, "shock", next_change)
 
-    return _brent_advice(
-        product, by_day, today, column, schedule, make, next_change, "rules" if trusted else "brent"
-    )
+    basis = "rules" if trusted else "brent"
+    if product is Product.DIESEL_B7:
+        found = _gasoil_advice(by_day, today, column, schedule, make, next_change, trusted)
+        if found is not None:
+            return found
+    return _brent_advice(product, by_day, today, column, schedule, make, next_change, basis)
+
+
+def _gasoil_advice(by_day, today, column, schedule, make_any, next_change, trusted):
+    """Diesel guess from the official daily gasoil cost (the heating oil max price), if stored.
+
+    The heating oil price valid on day D+1 is the cost of working day D, without a band, so the
+    cost of today is known this morning. The diesel price in force was set from the cost of the
+    day before its start (``heating[changed_on]``). Returns None when that history is missing.
+    """
+    changed_on = _last_change(by_day, today, column)
+    known = [
+        by_day[d]
+        for d in (today + timedelta(days=1), today)
+        if d in by_day and by_day[d].heating_oil_max is not None
+    ]
+    now = known[0] if known else None
+    base = by_day.get(changed_on) if changed_on else None
+    if now is None or base is None or not base.heating_oil_max:
+        return None
+    if (today - now.day).days > MAX_BRENT_AGE_DAYS:
+        return None
+    # Incl. VAT, so the difference is the move of the pump price itself.
+    expected = now.heating_oil_max - base.heating_oil_max
+    base_cost = base.heating_oil_max / (1 + rules.VAT_RATE)
+    days_since = _working_days_between(changed_on, next_change)
+    band = schedule.at(days_since) * base_cost
+    params = {
+        "cost_from": base.heating_oil_max,
+        "cost_to": now.heating_oil_max,
+        "since": changed_on.isoformat(),
+        "when": next_change.isoformat(),
+    }
+    basis = "rules" if trusted else "gasoil"
+    guess = "" if trusted else "_guess"
+    if abs(expected) / (1 + rules.VAT_RATE) < band or abs(expected) < MIN_CHANGE_EUR:
+        return make_any("no_difference", "gasoil_inside_band", params, 0.0, basis, next_change)
+    code = "gasoil_wait" if expected < 0 else "gasoil_fill"
+    action = WAIT if expected < 0 else FILL_UP
+    return make_any(action, f"{code}{guess}", params, expected, basis, next_change)
 
 
 def _brent_advice(product, by_day, today, column, schedule, make_any, next_change, basis="brent"):

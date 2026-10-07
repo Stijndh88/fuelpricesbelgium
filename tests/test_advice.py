@@ -261,3 +261,37 @@ def test_trusted_fit_turns_the_prediction_into_rules_advice():
 def test_published_price_is_never_a_guess():
     a = advice.advise(Product.DIESEL_B7, days(MON, [2.40, 2.37]), MON)
     assert not a.is_guess
+
+
+def _gasoil_rows(heating_now):
+    # Diesel changed on Tue 06/10 (cost of Mon: heating price 1.483 valid on Tue), today Wed.
+    tue = MON + timedelta(days=1)
+    rows = days(MON, [2.432, 2.392, 2.392, 2.392], [100, 101, 101, None])
+    rows = [
+        DailyPrices(
+            day=r.day,
+            diesel_max=r.diesel_max,
+            e10_max=r.e10_max,
+            brent_usd=r.brent_usd,
+            heating_oil_max={tue: 1.483, tue + timedelta(days=1): heating_now}.get(r.day),
+        )
+        for r in rows
+    ]
+    return rows, tue + timedelta(days=1)
+
+
+def test_gasoil_cost_fall_means_wait_even_when_brent_is_flat():
+    rows, today = _gasoil_rows(1.4227)
+    a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
+    assert a.action == advice.WAIT
+    assert a.basis == "gasoil"
+    assert a.is_guess
+    assert a.reason_code == "gasoil_wait_guess"
+    assert a.expected_change_cents == pytest.approx(-6.0, abs=0.1)
+
+
+def test_small_gasoil_cost_move_stays_in_band():
+    rows, today = _gasoil_rows(1.470)
+    a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
+    assert a.action == advice.NO_DIFFERENCE
+    assert a.reason_code == "gasoil_inside_band"
