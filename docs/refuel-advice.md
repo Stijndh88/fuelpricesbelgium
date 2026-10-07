@@ -13,7 +13,10 @@ expected change of the maximum price in cent/L. The code is in `src/fuelprices/a
    last price change. The move is converted to EUR/L (fixed rate 1.10 USD/EUR, 159 L per barrel,
    21% VAT on top) and compared with the band of the price rules (`fuelprices.rules`) at the next
    day a change could apply. Outside the band in either direction gives wait or fill up today with
-   that rough expected change; inside it gives no difference.
+   that rough expected change; inside it gives no difference. For diesel, when the stored history
+   has the official daily gasoil cost (the heating oil max price, known the same morning for
+   today), that cost replaces Brent here: its move since the cost behind the last diesel change is
+   compared with the band. Brent is only the fallback.
 3. **Market shock** (checked before step 2). If Brent or the matching product future moved at
    least 5% over 5 days (`--shock-threshold`, default 0.05; 0 turns it off), the advice is fill up
    today for a rise and wait for a drop, even when the rules band is not reached yet. Max prices
