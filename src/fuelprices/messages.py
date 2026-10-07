@@ -66,15 +66,20 @@ REASONS = {
         "possible from {when} (a guess).",
         "brent_fill_guess": "Brent {brent_from} to {brent_to} USD since {since}: a rise is "
         "possible from {when} (a guess).",
-        "gasoil_inside_band": "Wholesale gasoil price (via the heating oil max price) {cost_from} to "
+        "gasoil_inside_band": "Wholesale gasoil price (via the heating oil max price)"
+        " {cost_from} to "
         "{cost_to} EUR/L since {since}: inside the band, no change expected by {when}.",
-        "gasoil_wait": "Wholesale gasoil price (via the heating oil max price) {cost_from} to {cost_to} "
+        "gasoil_wait": "Wholesale gasoil price (via the heating oil max price)"
+        " {cost_from} to {cost_to} "
         "EUR/L since {since}: a drop is likely from {when}.",
-        "gasoil_fill": "Wholesale gasoil price (via the heating oil max price) {cost_from} to {cost_to} "
+        "gasoil_fill": "Wholesale gasoil price (via the heating oil max price)"
+        " {cost_from} to {cost_to} "
         "EUR/L since {since}: a rise is likely from {when}.",
-        "gasoil_wait_guess": "Wholesale gasoil price (via the heating oil max price) {cost_from} to "
+        "gasoil_wait_guess": "Wholesale gasoil price (via the heating oil max price)"
+        " {cost_from} to "
         "{cost_to} EUR/L since {since}: a drop is possible from {when} (a guess).",
-        "gasoil_fill_guess": "Wholesale gasoil price (via the heating oil max price) {cost_from} to "
+        "gasoil_fill_guess": "Wholesale gasoil price (via the heating oil max price)"
+        " {cost_from} to "
         "{cost_to} EUR/L since {since}: a rise is possible from {when} (a guess).",
     },
     "nl": {
@@ -102,15 +107,20 @@ REASONS = {
         "is mogelijk vanaf {when} (een gok).",
         "brent_fill_guess": "Brent van {brent_from} naar {brent_to} USD sinds {since}: een "
         "stijging is mogelijk vanaf {when} (een gok).",
-        "gasoil_inside_band": "Groothandelsprijs gasolie (via maximumprijs stookolie) van {cost_from} naar "
+        "gasoil_inside_band": "Groothandelsprijs gasolie (via maximumprijs stookolie)"
+        " van {cost_from} naar "
         "{cost_to} EUR/L sinds {since}: binnen de band, geen wijziging verwacht tegen {when}.",
-        "gasoil_wait": "Groothandelsprijs gasolie (via maximumprijs stookolie) van {cost_from} naar "
+        "gasoil_wait": "Groothandelsprijs gasolie (via maximumprijs stookolie)"
+        " van {cost_from} naar "
         "{cost_to} EUR/L sinds {since}: een daling is waarschijnlijk vanaf {when}.",
-        "gasoil_fill": "Groothandelsprijs gasolie (via maximumprijs stookolie) van {cost_from} naar "
+        "gasoil_fill": "Groothandelsprijs gasolie (via maximumprijs stookolie)"
+        " van {cost_from} naar "
         "{cost_to} EUR/L sinds {since}: een stijging is waarschijnlijk vanaf {when}.",
-        "gasoil_wait_guess": "Groothandelsprijs gasolie (via maximumprijs stookolie) van {cost_from} naar "
+        "gasoil_wait_guess": "Groothandelsprijs gasolie (via maximumprijs stookolie)"
+        " van {cost_from} naar "
         "{cost_to} EUR/L sinds {since}: een daling is mogelijk vanaf {when} (een gok).",
-        "gasoil_fill_guess": "Groothandelsprijs gasolie (via maximumprijs stookolie) van {cost_from} naar "
+        "gasoil_fill_guess": "Groothandelsprijs gasolie (via maximumprijs stookolie)"
+        " van {cost_from} naar "
         "{cost_to} EUR/L sinds {since}: een stijging is mogelijk vanaf {when} (een gok).",
     },
 }
