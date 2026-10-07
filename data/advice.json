@@ -1,52 +1,52 @@
 {
-  "as_of": "2026-10-06",
+  "as_of": "2026-10-07",
   "shock_threshold": 0.05,
   "advice": [
     {
       "product": "diesel_b7",
       "label": "Diesel B7",
-      "action": "wait",
-      "headline": "Wait",
-      "reason": "Wait until tomorrow (Wed 07/10): the maximum price drops 4.0 cent/L, 2.432 to 2.392 (published).",
-      "expected_change_cents": -4.0,
-      "basis": "published",
-      "price_today": 2.432,
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "Brent 101 to 101 USD since 07/10: inside the band, no change expected by Fri 09/10.",
+      "expected_change_cents": 0.0,
+      "basis": "brent",
+      "price_today": 2.392,
       "price_tomorrow": 2.392,
-      "next_possible_change": "2026-10-07",
+      "next_possible_change": "2026-10-09",
       "market_note": null,
-      "reason_code": "wait_published",
+      "reason_code": "brent_inside_band",
       "reason_params": {
-        "day": "2026-10-07",
-        "cents": 4.0,
-        "today": 2.432,
-        "tomorrow": 2.392
+        "brent_from": 100.58,
+        "brent_to": 101.39,
+        "since": "2026-10-07",
+        "when": "2026-10-09"
       },
       "market_note_params": null,
-      "is_guess": false
+      "is_guess": true
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Gasoline futures -8.3% since 01/10: a drop is likely from Thu 08/10 or soon after.",
-      "expected_change_cents": -8.2,
+      "reason": "Gasoline futures -5.2% since 02/10: a drop is likely from Fri 09/10 or soon after.",
+      "expected_change_cents": -5.0,
       "basis": "shock",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
-      "next_possible_change": "2026-10-08",
-      "market_note": "Big market move: Gasoline futures -8.3% since 01/10.",
+      "next_possible_change": "2026-10-09",
+      "market_note": "Big market move: Gasoline futures -5.2% since 02/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Gasoline futures",
-        "pct": -8.3,
-        "since": "2026-10-01",
-        "when": "2026-10-08"
+        "pct": -5.2,
+        "since": "2026-10-02",
+        "when": "2026-10-09"
       },
       "market_note_params": {
         "name": "Gasoline futures",
-        "pct": -8.3,
-        "since": "2026-10-01"
+        "pct": -5.2,
+        "since": "2026-10-02"
       },
       "is_guess": true
     }
@@ -55,17 +55,17 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-11",
-      "held_out_to": "2026-10-07",
+      "held_out_from": "2026-04-12",
+      "held_out_to": "2026-10-08",
       "real_changes": 38,
-      "precision": 0.73,
+      "precision": 0.75,
       "recall": 0.63
     },
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-11",
-      "held_out_to": "2026-10-07",
+      "held_out_from": "2026-04-12",
+      "held_out_to": "2026-10-08",
       "real_changes": 26,
       "precision": 0.39,
       "recall": 0.27
@@ -92,19 +92,19 @@
       "product": "diesel_b7",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 225,
+      "saved": 224,
       "same": 75,
-      "lost": 60,
-      "avg_saving_cents": 1.68,
+      "lost": 61,
+      "avg_saving_cents": 1.67,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "diesel_b7",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 239,
+      "saved": 238,
       "same": 75,
-      "lost": 46,
+      "lost": 47,
       "avg_saving_cents": 2.04,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
