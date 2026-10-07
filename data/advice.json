@@ -5,20 +5,20 @@
     {
       "product": "diesel_b7",
       "label": "Diesel B7",
-      "action": "fill_up_today",
-      "headline": "Fill up today",
-      "reason": "Diesel futures +5.0% since 02/10: a rise is likely from Fri 09/10 or soon after.",
-      "expected_change_cents": 6.5,
-      "basis": "shock",
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Official gasoil cost (heating oil max price) 1.483 to 1.4227 EUR/L since 07/10: a drop is possible from Fri 09/10 (a guess).",
+      "expected_change_cents": -6.0,
+      "basis": "gasoil",
       "price_today": 2.392,
       "price_tomorrow": 2.392,
       "next_possible_change": "2026-10-09",
       "market_note": "Big market move: Diesel futures +5.0% since 02/10.",
-      "reason_code": "shock_fill",
+      "reason_code": "gasoil_wait_guess",
       "reason_params": {
-        "name": "Diesel futures",
-        "pct": 5.0,
-        "since": "2026-10-02",
+        "cost_from": 1.483,
+        "cost_to": 1.4227,
+        "since": "2026-10-07",
         "when": "2026-10-09"
       },
       "market_note_params": {
@@ -43,7 +43,7 @@
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 102.31,
-        "brent_to": 101.79,
+        "brent_to": 101.83,
         "since": "2026-10-02",
         "when": "2026-10-09"
       },
@@ -102,10 +102,10 @@
       "product": "diesel_b7",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 245,
+      "saved": 247,
       "same": 75,
-      "lost": 40,
-      "avg_saving_cents": 2.1,
+      "lost": 38,
+      "avg_saving_cents": 2.15,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
