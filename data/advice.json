@@ -13,7 +13,7 @@
       "price_today": 2.392,
       "price_tomorrow": 2.392,
       "next_possible_change": "2026-10-09",
-      "market_note": "Big market move: Diesel futures +5.3% since 02/10.",
+      "market_note": null,
       "reason_code": "gasoil_wait_guess",
       "reason_params": {
         "cost_from": 1.483,
@@ -21,33 +21,33 @@
         "since": "2026-10-07",
         "when": "2026-10-09"
       },
-      "market_note_params": {
-        "name": "Diesel futures",
-        "pct": 5.3,
-        "since": "2026-10-02"
-      },
+      "market_note_params": null,
       "is_guess": true
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 102 to 102 USD since 02/10: inside the band, no change expected by Fri 09/10.",
-      "expected_change_cents": 0.0,
-      "basis": "brent",
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Gasoline futures -5.6% since 02/10: a drop is likely from Fri 09/10 or soon after.",
+      "expected_change_cents": -5.4,
+      "basis": "shock",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
       "next_possible_change": "2026-10-09",
-      "market_note": null,
-      "reason_code": "brent_inside_band",
+      "market_note": "Big market move: Gasoline futures -5.6% since 02/10.",
+      "reason_code": "shock_wait",
       "reason_params": {
-        "brent_from": 102.31,
-        "brent_to": 101.94,
+        "name": "Gasoline futures",
+        "pct": -5.6,
         "since": "2026-10-02",
         "when": "2026-10-09"
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Gasoline futures",
+        "pct": -5.6,
+        "since": "2026-10-02"
+      },
       "is_guess": true
     }
   ],
