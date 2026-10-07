@@ -279,17 +279,22 @@ def advise(
         # Same price tomorrow: the next possible change is the computation after that.
         next_change = next_possible_change(tomorrow)
 
+    gasoil = None
+    if product is Product.DIESEL_B7:
+        gasoil = _gasoil_advice(by_day, today, column, schedule, make, next_change, trusted)
     if big_move and abs(big_move.eur_per_litre) >= MIN_CHANGE_EUR:
+        # The official gasoil cost already moved the other way: that is the real input of the
+        # next price change, a futures move only reaches it a day or two later, so it wins.
+        if gasoil is not None and gasoil.expected_change_cents * big_move.change < 0:
+            return gasoil
         params = {**big_move.params, "when": next_change.isoformat()}
         if big_move.change < 0:
             return make(WAIT, "shock_wait", params, big_move.eur_per_litre, "shock", next_change)
         return make(FILL_UP, "shock_fill", params, big_move.eur_per_litre, "shock", next_change)
 
     basis = "rules" if trusted else "brent"
-    if product is Product.DIESEL_B7:
-        found = _gasoil_advice(by_day, today, column, schedule, make, next_change, trusted)
-        if found is not None:
-            return found
+    if gasoil is not None:
+        return gasoil
     return _brent_advice(product, by_day, today, column, schedule, make, next_change, basis)
 
 
