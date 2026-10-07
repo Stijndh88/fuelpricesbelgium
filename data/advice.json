@@ -29,23 +29,23 @@
       "label": "Benzine 95 RON E10",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Gasoline futures -5.6% since 02/10: a drop is likely from Fri 09/10 or soon after.",
-      "expected_change_cents": -5.4,
+      "reason": "Gasoline futures -7.2% since 02/10: a drop is likely from Fri 09/10 or soon after.",
+      "expected_change_cents": -6.9,
       "basis": "shock",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
       "next_possible_change": "2026-10-09",
-      "market_note": "Big market move: Gasoline futures -5.6% since 02/10.",
+      "market_note": "Big market move: Gasoline futures -7.2% since 02/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Gasoline futures",
-        "pct": -5.6,
+        "pct": -7.2,
         "since": "2026-10-02",
         "when": "2026-10-09"
       },
       "market_note_params": {
         "name": "Gasoline futures",
-        "pct": -5.6,
+        "pct": -7.2,
         "since": "2026-10-02"
       },
       "is_guess": true
