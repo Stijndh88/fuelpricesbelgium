@@ -71,7 +71,10 @@ repository variable `NTFY_DAILY` to `1` for a summary every run. Try it locally 
 Every text in `advice.json` comes as an English sentence plus a stable message code and parameters
 (`reason_code`/`reason_params`, `market_note_params`, `caveat_codes`; the headline follows from
 `action`). The dashboard renders them in Dutch or English from its own table in `site/i18n.js`
-and falls back to the English sentence for a code it does not know. The templates live in
+and never shows the English sentence on the Dutch page: for a code it does not know it shows a
+Dutch notice to reload (the English page may fall back to the English sentence). Rule: every
+user-facing Dutch text must be Dutch; `tests/test_messages.py` scans the Dutch templates and the
+Dutch dashboard table for English words, so a new text without a proper Dutch version fails CI. The templates live in
 `src/fuelprices/messages.py`; a test checks both tables hold the same codes. The ntfy message is
 Dutch followed by English; set the repository variable `NTFY_LANGUAGES` (`en`, `nl` or `en,nl`) to
 change that.
