@@ -57,9 +57,7 @@ def _reason(item: dict, lang: str) -> str:
         return item["reason"]  # no code, or a code this version does not know: English text
 
 
-def build_message(
-    current: dict, languages: tuple[str, ...] = DEFAULT_LANGUAGES
-) -> tuple[str, str]:
+def build_message(current: dict, languages: tuple[str, ...] = DEFAULT_LANGUAGES) -> tuple[str, str]:
     """Return (title, body): headline per product in the first language, reasons in all of them."""
     items = [i for i in current.get("advice", []) if i.get("product") in PRODUCTS]
     title_prefix = {"nl": "Tankadvies", "en": "Refuel advice"}.get(languages[0], "Refuel advice")
