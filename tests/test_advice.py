@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from fuelprices import advice, history
+from fuelprices import advice, history, messages
 from fuelprices.history import DailyPrices
 from fuelprices.products import Product
 
@@ -149,7 +149,9 @@ def test_diesel_futures_shock_means_fill_up():
     # Max price flat, Brent flat, but diesel futures +8% in five days: a rise is coming.
     rows = market(MON, [2.40] * 6, [80] * 6, [2.50, 2.52, 2.55, 2.60, 2.65, 2.70])
     a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=5))
-    assert a.action == advice.FILL_UP
+    # Saturday: no change before Tuesday, so Monday is the last day at the current price.
+    assert a.action == advice.FILL_BY
+    assert a.headline_params == {"day": (MON + timedelta(days=7)).isoformat()}
     assert a.basis == "shock"
     assert "Diesel futures +8.0%" in a.reason
     assert a.expected_change_cents > 5
@@ -315,3 +317,22 @@ def test_gasoil_cost_fall_beats_an_opposite_diesel_futures_shock():
     assert a.reason_code == "gasoil_wait_guess"
     assert a.action == advice.WAIT
     assert a.market_note is not None
+
+
+def test_expected_rise_after_an_unchanged_published_price_is_fill_by_not_today():
+    # Wed: tomorrow (Thu) is published unchanged, so a rise can only start on Fri at the earliest...
+    rows, today = _gasoil_rows(1.60)  # +11.7 cent/L since the last change, far outside the band
+    a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
+    assert a.reason_code.startswith("gasoil_fill")
+    assert a.action == advice.FILL_BY
+    assert a.next_possible_change > (today + timedelta(days=1)).isoformat()
+    last_day = date.fromisoformat(a.next_possible_change) - timedelta(days=1)
+    assert a.headline_params == {"day": last_day.isoformat()}
+    weekday = messages.WEEKDAYS["en"][last_day.weekday()]
+    assert a.headline == f"Fill up by {weekday} {last_day:%d/%m}"
+
+
+def test_rise_published_for_tomorrow_stays_fill_up_today():
+    a = advice.advise(Product.DIESEL_B7, days(MON, [2.40, 2.45]), MON)
+    assert a.action == advice.FILL_UP
+    assert a.headline_params is None

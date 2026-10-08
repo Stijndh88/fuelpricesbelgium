@@ -31,6 +31,7 @@ from fuelprices.history import DailyPrices
 from fuelprices.products import Product
 
 FILL_UP = "fill_up_today"
+FILL_BY = "fill_by"  # a rise is expected, but not before the day after tomorrow
 WAIT = "wait"
 NO_DIFFERENCE = "no_difference"
 
@@ -80,6 +81,7 @@ class Advice:
     reason_params: dict | None = None
     market_note_params: dict | None = None
     is_guess: bool = True  # False only for a published price or a rules fit that passed its test
+    headline_params: dict | None = None  # the last day at the current price, for "fill_by"
 
 
 @dataclass(frozen=True)
@@ -187,13 +189,30 @@ def _working_days_between(start: date, end: date) -> int:
 
 
 def _make(
-    product, action, code, params, change, basis, today_price, tomorrow_price, next_change, note
+    product,
+    action,
+    code,
+    params,
+    change,
+    basis,
+    today_price,
+    tomorrow_price,
+    next_change,
+    note,
+    today=None,
 ):
+    headline_params = None
+    if action == FILL_UP and today is not None and next_change > today + timedelta(days=1):
+        # Tomorrow cannot be dearer (it is published, or a Sunday): no need to fill up today,
+        # the last day at the current price is the day before the first possible change.
+        action = FILL_BY
+        headline_params = {"day": (next_change - timedelta(days=1)).isoformat()}
     return Advice(
         product=product.code,
         label=product.label,
         action=action,
-        headline=messages.headline(action),
+        headline=messages.headline(action, params=headline_params),
+        headline_params=headline_params,
         reason=messages.reason(code, params),
         reason_code=code,
         reason_params=params,
@@ -249,6 +268,7 @@ def advise(
             price_tomorrow,
             next_day or next_change,
             note,
+            today,
         )
 
     if price_today is None:
