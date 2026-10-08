@@ -1,53 +1,53 @@
 {
-  "as_of": "2026-10-07",
+  "as_of": "2026-10-08",
   "shock_threshold": 0.05,
   "advice": [
     {
       "product": "diesel_b7",
       "label": "Diesel B7",
-      "action": "wait",
-      "headline": "Wait",
-      "reason": "Wholesale gasoil price (via the heating oil max price) 1.483 to 1.4227 EUR/L since 07/10: a drop is possible from Fri 09/10 (a guess).",
-      "expected_change_cents": -6.0,
-      "basis": "gasoil",
+      "action": "fill_up_today",
+      "headline": "Fill up today",
+      "reason": "Diesel futures +7.1% since 02/10: a rise is likely from Sat 10/10 or soon after.",
+      "expected_change_cents": 9.3,
+      "basis": "shock",
       "price_today": 2.392,
       "price_tomorrow": 2.392,
-      "next_possible_change": "2026-10-09",
-      "market_note": null,
-      "reason_code": "gasoil_wait_guess",
+      "next_possible_change": "2026-10-10",
+      "market_note": "Big market move: Diesel futures +7.1% since 02/10.",
+      "reason_code": "shock_fill",
       "reason_params": {
-        "cost_from": 1.483,
-        "cost_to": 1.4227,
-        "since": "2026-10-07",
-        "when": "2026-10-09"
+        "name": "Diesel futures",
+        "pct": 7.1,
+        "since": "2026-10-02",
+        "when": "2026-10-10"
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Diesel futures",
+        "pct": 7.1,
+        "since": "2026-10-02"
+      },
       "is_guess": true
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "wait",
-      "headline": "Wait",
-      "reason": "Gasoline futures -7.2% since 02/10: a drop is likely from Fri 09/10 or soon after.",
-      "expected_change_cents": -6.9,
-      "basis": "shock",
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "Brent 102 to 104 USD since 02/10: inside the band, no change expected by Sat 10/10.",
+      "expected_change_cents": 0.0,
+      "basis": "brent",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
-      "next_possible_change": "2026-10-09",
-      "market_note": "Big market move: Gasoline futures -7.2% since 02/10.",
-      "reason_code": "shock_wait",
+      "next_possible_change": "2026-10-10",
+      "market_note": null,
+      "reason_code": "brent_inside_band",
       "reason_params": {
-        "name": "Gasoline futures",
-        "pct": -7.2,
+        "brent_from": 102.31,
+        "brent_to": 104.46,
         "since": "2026-10-02",
-        "when": "2026-10-09"
+        "when": "2026-10-10"
       },
-      "market_note_params": {
-        "name": "Gasoline futures",
-        "pct": -7.2,
-        "since": "2026-10-02"
-      },
+      "market_note_params": null,
       "is_guess": true
     }
   ],
@@ -55,8 +55,8 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-12",
-      "held_out_to": "2026-10-08",
+      "held_out_from": "2026-04-13",
+      "held_out_to": "2026-10-09",
       "real_changes": 38,
       "precision": 0.75,
       "recall": 0.63
@@ -64,8 +64,8 @@
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-12",
-      "held_out_to": "2026-10-08",
+      "held_out_from": "2026-04-13",
+      "held_out_to": "2026-10-09",
       "real_changes": 26,
       "precision": 0.39,
       "recall": 0.27
@@ -93,8 +93,8 @@
       "shock_threshold": null,
       "windows": 360,
       "saved": 228,
-      "same": 75,
-      "lost": 57,
+      "same": 74,
+      "lost": 58,
       "avg_saving_cents": 1.72,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
@@ -103,8 +103,8 @@
       "shock_threshold": 0.05,
       "windows": 360,
       "saved": 247,
-      "same": 75,
-      "lost": 38,
+      "same": 74,
+      "lost": 39,
       "avg_saving_cents": 2.15,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
@@ -113,8 +113,8 @@
       "shock_threshold": null,
       "windows": 360,
       "saved": 189,
-      "same": 138,
-      "lost": 33,
+      "same": 139,
+      "lost": 32,
       "avg_saving_cents": 1.03,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
@@ -123,8 +123,8 @@
       "shock_threshold": 0.05,
       "windows": 360,
       "saved": 193,
-      "same": 138,
-      "lost": 29,
+      "same": 139,
+      "lost": 28,
       "avg_saving_cents": 1.15,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
