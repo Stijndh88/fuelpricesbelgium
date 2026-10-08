@@ -45,7 +45,7 @@ def changed(current: dict, previous: dict | None) -> bool:
 
 def _headline(item: dict, lang: str) -> str:
     try:
-        return messages.headline(item["action"], lang)
+        return messages.headline(item["action"], lang, item.get("headline_params"))
     except KeyError:
         return item["headline"]
 

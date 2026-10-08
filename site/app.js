@@ -139,7 +139,7 @@ function renderAdvice(data) {
     .filter(([, a]) => a)
     .map(([p, a]) => {
       const item = el("div", { class: "advice-item " + String(a.action || "").replace(/[^a-z_]/g, "") });
-      const headline = hasText("headlines." + a.action) ? t("headlines." + a.action) : a.headline || a.action || "–";
+      const headline = hasText("headlines." + a.action) ? t("headlines." + a.action, adviceParams(a.headline_params)) : a.headline || a.action || "–";
       item.append(el("div", { class: "advice-head" }, `${p.label}: ${headline}`));
       const reason = adviceText("reasons", a.reason_code, a.reason_params, a.reason);
       if (reason) item.append(el("div", { class: "advice-reason" }, reason));

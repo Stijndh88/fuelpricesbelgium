@@ -66,6 +66,13 @@ is skipped. A message goes out only when the action for diesel B7 or E10 changed
 repository variable `NTFY_DAILY` to `1` for a summary every run. Try it locally with
 `python -m fuelprices.notify --dry-run`.
 
+## Fill up today or by a later day
+
+"Fill up today" only appears when a rise can start tomorrow (tomorrow's price is not published yet,
+or is itself higher). When tomorrow's price is already published as unchanged, or tomorrow is a
+Sunday, a rise cannot start before the next possible change, so the advice says "Fill up by"
+the day before that (`action: fill_by`, `headline_params.day`): there is no hurry today.
+
 ## Languages
 
 Every text in `advice.json` comes as an English sentence plus a stable message code and parameters

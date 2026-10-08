@@ -47,7 +47,7 @@ const I18N = {
     footer:
       "Official maximum prices (incl. VAT) from FOD Economie. Brent spot price from FRED (EIA), a few working days behind.",
     source: "Source",
-    headlines: { wait: "Wait", fill_up_today: "Fill up today", no_difference: "No difference" },
+    headlines: { wait: "Wait", fill_up_today: "Fill up today", fill_by: "Fill up by {day}", no_difference: "No difference" },
     market_names: { "Diesel futures": "Diesel futures", "Gasoline futures": "Gasoline futures", Brent: "Brent" },
     advice_unknown: "Advice text not available in this page version; reload the page.",
     market_note: "Big market move: {name} {pct} since {since}.",
@@ -133,7 +133,7 @@ const I18N = {
     footer:
       "Officiële maximumprijzen (incl. btw) van FOD Economie. Brent-spotprijs van FRED (EIA), enkele werkdagen achter.",
     source: "Bron",
-    headlines: { wait: "Wacht", fill_up_today: "Tank vandaag", no_difference: "Geen verschil" },
+    headlines: { wait: "Wacht", fill_up_today: "Tank vandaag", fill_by: "Tank uiterlijk {day}", no_difference: "Geen verschil" },
     market_names: { "Diesel futures": "Diesel-futures", "Gasoline futures": "Benzine-futures", Brent: "Brent" },
     advice_unknown: "Adviestekst niet beschikbaar in deze paginaversie; laad de pagina opnieuw.",
     market_note: "Grote marktbeweging: {name} {pct} sinds {since}.",

@@ -15,8 +15,18 @@ from datetime import date
 LANGUAGES = ("nl", "en")
 
 HEADLINES = {
-    "en": {"wait": "Wait", "fill_up_today": "Fill up today", "no_difference": "No difference"},
-    "nl": {"wait": "Wacht", "fill_up_today": "Tank vandaag", "no_difference": "Geen verschil"},
+    "en": {
+        "wait": "Wait",
+        "fill_up_today": "Fill up today",
+        "fill_by": "Fill up by {day}",
+        "no_difference": "No difference",
+    },
+    "nl": {
+        "wait": "Wacht",
+        "fill_up_today": "Tank vandaag",
+        "fill_by": "Tank uiterlijk {day}",
+        "no_difference": "Geen verschil",
+    },
 }
 
 MARKET_NAMES = {
@@ -211,5 +221,5 @@ def caveat(code: str, lang: str = "en") -> str:
     return CAVEATS[code][lang]
 
 
-def headline(action: str, lang: str = "en") -> str:
-    return HEADLINES[lang][action]
+def headline(action: str, lang: str = "en", params: dict | None = None) -> str:
+    return HEADLINES[lang][action].format(**_fill(lang, params or {}))

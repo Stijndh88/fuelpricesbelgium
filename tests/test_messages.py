@@ -83,3 +83,13 @@ def test_dutch_page_never_shows_the_english_advice_text():
 
     app = (Path(__file__).parent.parent / "site" / "app.js").read_text(encoding="utf-8")
     assert 'lang === "nl" && fallback ? t("advice_unknown")' in app
+
+
+def test_every_headline_exists_in_both_languages_and_the_dashboard():
+    from pathlib import Path
+
+    assert set(messages.HEADLINES["en"]) == set(messages.HEADLINES["nl"])
+    table = (Path(__file__).parent.parent / "site" / "i18n.js").read_text(encoding="utf-8")
+    for action in messages.HEADLINES["en"]:
+        assert table.count(f"{action}: ") >= 2, action
+    assert messages.headline("fill_by", "nl", {"day": "2026-10-09"}) == "Tank uiterlijk vr 09/10"
