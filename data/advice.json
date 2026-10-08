@@ -34,27 +34,25 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "fill_by",
-      "headline": "Fill up by Fri 09/10",
-      "reason": "Brent 102 to 105 USD since 02/10: a rise is possible from Sat 10/10 (a guess).",
-      "expected_change_cents": 1.6,
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "Brent 102 to 104 USD since 02/10: inside the band, no change expected by Sat 10/10.",
+      "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 2.065,
       "price_tomorrow": 2.065,
       "next_possible_change": "2026-10-10",
       "market_note": null,
-      "reason_code": "brent_fill_guess",
+      "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 102.31,
-        "brent_to": 104.68,
+        "brent_to": 104.41,
         "since": "2026-10-02",
         "when": "2026-10-10"
       },
       "market_note_params": null,
       "is_guess": true,
-      "headline_params": {
-        "day": "2026-10-09"
-      }
+      "headline_params": null
     }
   ],
   "calibration": {
