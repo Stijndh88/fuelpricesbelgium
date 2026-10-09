@@ -11,14 +11,13 @@ on:
         type: boolean
         default: false
   schedule:
-    # Tomorrow's maximum price is known by the morning (the Energieprijzen newsletter
-    # already quotes it at about 07:45 UTC). GitHub cron runs are often late, so run a few times
-    # from the early morning on; a run without new prices leaves the files untouched. The run log
-    # shows which valid-from date each run saw, i.e. when a new price first appears.
-    - cron: "30 5 * * *"
-    - cron: "15 7 * * *"
-    - cron: "15 8 * * *"
-    - cron: "15 10 * * *"
+    # Once a day at 10:00 Belgian time, when the morning's official prices and the newsletter's
+    # market data are out (the FOD price for tomorrow appears around 07:45 UTC). GitHub cron is
+    # UTC only and Belgium switches between UTC+2 and UTC+1, so two entries fire (08:00 and 09:00
+    # UTC) and the gate job lets through only the one that is 10 o'clock in Brussels. Scheduled
+    # runs can start a few minutes late; one that starts after 10:59 Brussels time is skipped.
+    - cron: "0 8 * * *"
+    - cron: "0 9 * * *"
 
 permissions:
   contents: write
@@ -28,7 +27,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.hour.outputs.run }}
+    steps:
+      - id: hour
+        run: |
+          hour="$(TZ=Europe/Brussels date +%H)"
+          echo "Brussels hour: $hour (event: $GITHUB_EVENT_NAME)"
+          if [ "$GITHUB_EVENT_NAME" != schedule ] || [ "$hour" = 10 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   update:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
