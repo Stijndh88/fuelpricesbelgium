@@ -107,9 +107,10 @@ function deltaNode(diff) {
 // ---- Refuel advice (optional file) ----
 
 // Turn the parameters that come with a reason code into display text for the current language.
-function adviceParams(params = {}) {
+function adviceParams(params) {
   const out = {};
-  for (const [key, value] of Object.entries(params)) {
+  // advice.json writes null (not undefined) when a text has no parameters
+  for (const [key, value] of Object.entries(params || {})) {
     if (["day", "when"].includes(key)) out[key] = fmtDay(value);
     else if (key === "since") out[key] = fmtShortDay(value);
     else if (key === "pct") out[key] = (value > 0 ? "+" : "") + num(value, 1) + "%";
