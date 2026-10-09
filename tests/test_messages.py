@@ -93,3 +93,12 @@ def test_every_headline_exists_in_both_languages_and_the_dashboard():
     for action in messages.HEADLINES["en"]:
         assert table.count(f"{action}: ") >= 2, action
     assert messages.headline("fill_by", "nl", {"day": "2026-10-09"}) == "Tank uiterlijk vr 09/10"
+
+
+def test_dashboard_copes_with_null_parameters_in_advice_json():
+    # advice.json has "headline_params": null for most actions; Object.entries(null) throws and
+    # the page then silently shows "no advice yet" (seen on 2026-10-09).
+    from pathlib import Path
+
+    app = (Path(__file__).parent.parent / "site" / "app.js").read_text(encoding="utf-8")
+    assert "Object.entries(params || {})" in app
