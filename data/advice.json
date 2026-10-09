@@ -13,7 +13,7 @@
       "price_today": 2.392,
       "price_tomorrow": 2.492,
       "next_possible_change": "2026-10-10",
-      "market_note": "Big market move: Diesel futures +6.6% since 02/10.",
+      "market_note": "Big market move: Diesel futures +6.5% since 02/10.",
       "reason_code": "fill_published",
       "reason_params": {
         "day": "2026-10-10",
@@ -23,7 +23,7 @@
       },
       "market_note_params": {
         "name": "Diesel futures",
-        "pct": 6.6,
+        "pct": 6.5,
         "since": "2026-10-02"
       },
       "is_guess": false,
@@ -44,7 +44,7 @@
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 102.31,
-        "brent_to": 103.14,
+        "brent_to": 102.98,
         "since": "2026-10-02",
         "when": "2026-10-13"
       },
