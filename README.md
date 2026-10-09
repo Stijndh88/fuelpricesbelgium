@@ -9,8 +9,8 @@ when it pays to wait (or hurry) to fill up.
   and adds them to `data/max_prices.csv`.
 - `fuelprices show` prints the latest known price per product.
 - `python -m fuelprices.update` adds today's diesel and E10 max prices and the Brent crude price
-  to `data/prices.sqlite`, one row per day. The "Daily price update" GitHub Action runs it every
-  morning (and weekday afternoons) and commits the file. See [data/README.md](data/README.md).
+  to `data/prices.sqlite`, one row per day. The "Daily price update" GitHub Action runs it every day at 10:00 Belgian time
+  and commits the file. See [data/README.md](data/README.md).
 - `fuelprices advise` says per product (diesel B7, E10) whether to **fill up today**, **wait**
   or that it makes **no difference**, with a one-line reason and the expected change in cent/L,
   plus a backtest against filling up on a random day. The daily job writes the same to
