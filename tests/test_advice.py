@@ -336,3 +336,79 @@ def test_rise_published_for_tomorrow_stays_fill_up_today():
     a = advice.advise(Product.DIESEL_B7, days(MON, [2.40, 2.45]), MON)
     assert a.action == advice.FILL_UP
     assert a.headline_params is None
+
+
+def _market_rows(start, diesel, ulsd, brent):
+    return [
+        DailyPrices(
+            day=start + timedelta(days=i),
+            diesel_max=d,
+            e10_max=1.80,
+            ulsd_usd_gal=u,
+            brent_usd=b,
+            eur_usd=1.12,
+        )
+        for i, (d, u, b) in enumerate(zip(diesel, ulsd, brent, strict=True))
+    ]
+
+
+def test_a_rise_that_is_already_in_the_price_does_not_drive_the_advice_again():
+    # Futures rose 7% from Mon to Wed; the max price rose on Thu (10 cent). On Thu to Sun the old
+    # futures move must not say "rise likely" again: it is already in the price.
+    start = MON - timedelta(days=3)  # Fri 2 Oct
+    prices = [2.40] * 6 + [2.50] * 4  # rise on Thu 8 Oct
+    ulsd = [4.50, None, None, 4.50, 4.60, 4.82, 4.80, 4.79, None, None]
+    brent = [100, None, None, 100, 101, 104, 103, 103, None, None]
+    rows = _market_rows(start, prices, ulsd, brent)
+    thu = MON + timedelta(days=3)
+    # Looking back five days, the futures move still looks like a shock on Thursday...
+    by_day = {r.day: r for r in rows}
+    assert advice.shock(advice.market_moves(Product.DIESEL_B7, by_day, thu), 0.05)
+    # ...but it is already in the price that rose on Thursday, so it must not count again.
+    for offset in (3, 4, 5, 6):
+        today = MON + timedelta(days=offset)
+        a = advice.advise(Product.DIESEL_B7, rows, today)
+        assert a.action in (advice.NO_DIFFERENCE, advice.WAIT), (today, a.reason)
+        assert a.market_note is None, (today, a.market_note)
+
+
+def test_a_rise_not_yet_in_the_price_still_counts():
+    # Same futures, but the max price has not moved yet: a rise is still coming.
+    rows = _market_rows(
+        MON - timedelta(days=3),
+        [2.40] * 8,
+        [4.50, 4.50, 4.50, 4.50, 4.60, 4.82, 4.80, 4.79],
+        [100] * 4 + [101, 104, 103, 103],
+    )
+    a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=4))
+    assert a.basis == "shock" and a.expected_change_cents > 0
+
+
+def test_old_market_data_is_not_used():
+    rows = _market_rows(MON, [2.40] * 3, [4.50, 4.60, 4.82], [100, 101, 104])
+    a = advice.advise(Product.DIESEL_B7, rows, MON + timedelta(days=12))
+    assert a.reason_code == "brent_no_data"
+
+
+def test_fill_by_and_today_follow_the_calendar():
+    # Published tomorrow rise: fill up today. Published unchanged tomorrow plus a rise expected
+    # later: fill up by the day before it can start. Never a day that is already past.
+    published = advice.advise(Product.DIESEL_B7, days(MON, [2.40, 2.50]), MON)
+    assert published.action == advice.FILL_UP and published.headline_params is None
+    for offset in range(0, 14):
+        today = MON + timedelta(days=offset)
+        rows = days(MON, [2.40] * (offset + 1), [100] * (offset + 1))
+        a = advice.advise(Product.DIESEL_B7, rows, today)
+        if a.headline_params:
+            assert date.fromisoformat(a.headline_params["day"]) >= today, (today, a.headline_params)
+
+
+def test_advice_json_says_which_day_it_is_for_and_how_fresh_the_market_data_is(tmp_path):
+    conn = history.connect(tmp_path / "p.sqlite")
+    for row in days(MON, [2.40, 2.40], [100, 101]):
+        history.upsert(conn, row)
+    data = advice.export(conn, MON + timedelta(days=1))
+    assert data["as_of"] == (MON + timedelta(days=1)).isoformat()
+    assert data["market_as_of"] == (MON + timedelta(days=1)).isoformat()
+    stale = advice.export(conn, MON + timedelta(days=5))
+    assert stale["market_as_of"] == (MON + timedelta(days=1)).isoformat()

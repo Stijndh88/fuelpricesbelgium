@@ -20,6 +20,7 @@ const I18N = {
     advice_placeholder:
       "Advice is not available yet. It will appear here once the daily job starts publishing it.",
     advice_for: "Advice for {day}",
+    advice_stale: "Careful: this advice is from {day}, not from today, and may be out of date.",
     diesel: "Diesel B7",
     e10: "Petrol E10",
     today: "Today",
@@ -105,6 +106,7 @@ const I18N = {
     advice_placeholder:
       "Er is nog geen advies. Het verschijnt hier zodra de dagelijkse taak het begint te publiceren.",
     advice_for: "Advies voor {day}",
+    advice_stale: "Opgelet: dit advies is van {day}, niet van vandaag, en kan verouderd zijn.",
     diesel: "Diesel B7",
     e10: "Benzine E10",
     today: "Vandaag",

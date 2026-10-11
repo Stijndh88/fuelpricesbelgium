@@ -29,6 +29,8 @@ HEADLINES = {
     },
 }
 
+ADVICE_FOR = {"en": "Advice for {day}", "nl": "Advies voor {day}"}
+
 MARKET_NAMES = {
     "en": {
         "Diesel futures": "Diesel futures",
@@ -219,6 +221,10 @@ def market_note(params: dict, lang: str = "en") -> str:
 
 def caveat(code: str, lang: str = "en") -> str:
     return CAVEATS[code][lang]
+
+
+def advice_for(iso: str, lang: str = "en") -> str:
+    return ADVICE_FOR[lang].format(day=_day(lang, iso, True))
 
 
 def headline(action: str, lang: str = "en", params: dict | None = None) -> str:

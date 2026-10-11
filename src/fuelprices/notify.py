@@ -15,9 +15,10 @@ import json
 import os
 import sys
 import urllib.request
+from datetime import date
 from pathlib import Path
 
-from fuelprices import messages
+from fuelprices import clock, messages
 
 DASHBOARD_URL = "https://stijndh88.github.io/fuelpricesbelgium/"
 SERVER = "https://ntfy.sh"
@@ -66,7 +67,10 @@ def build_message(current: dict, languages: tuple[str, ...] = DEFAULT_LANGUAGES)
     )
     sections = []
     for lang in languages:
-        section = "\n".join(f"{i['label']}: {_reason(i, lang)}" for i in items)
+        lines = [f"{i['label']}: {_reason(i, lang)}" for i in items]
+        if current.get("as_of"):
+            lines.insert(0, messages.advice_for(current["as_of"], lang))
+        section = "\n".join(lines)
         if section not in sections:  # without codes every language falls back to the same text
             sections.append(section)
     return title, "\n\n".join(sections)
@@ -93,6 +97,7 @@ def run(
     daily: bool,
     dry_run: bool,
     languages: tuple[str, ...] = DEFAULT_LANGUAGES,
+    today: date | None = None,
 ) -> str:
     """Decide and send; returns a short status line that is safe to log (no topic)."""
     if not current_path.exists():
@@ -101,6 +106,9 @@ def run(
     previous = None
     if previous_path and previous_path.exists():
         previous = json.loads(previous_path.read_text())
+    as_of = current.get("as_of")
+    if as_of and as_of != (today or clock.today_brussels()).isoformat():
+        return f"Advice is from {as_of}, not today; no notification."
     if not (daily or changed(current, previous)):
         return "Advice unchanged; no notification."
     title, body = build_message(current, languages)
