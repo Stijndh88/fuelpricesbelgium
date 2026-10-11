@@ -13,7 +13,7 @@ import sys
 from datetime import date, timedelta
 from pathlib import Path
 
-from fuelprices import crude, history, update
+from fuelprices import clock, crude, history, update
 from fuelprices.history import DailyPrices
 from fuelprices.sources import petrolfed
 
@@ -64,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     conn = history.connect(args.db)
     try:
-        failed = backfill(conn, args.since, date.today())
+        failed = backfill(conn, args.since, clock.today_brussels())
     finally:
         conn.close()
     return 1 if failed else 0

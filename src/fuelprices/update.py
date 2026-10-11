@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterable
 from datetime import date, timedelta
 from pathlib import Path
 
-from fuelprices import crude, history
+from fuelprices import clock, crude, history
 from fuelprices.history import DailyPrices
 from fuelprices.models import PriceRecord
 from fuelprices.products import Product
@@ -50,7 +50,7 @@ def to_daily(records: Iterable[PriceRecord]) -> list[DailyPrices]:
 
 def fetch_petrolfed(since: date) -> list[PriceRecord]:
     """Daily max prices from petrolfed.be from ``since`` until tomorrow."""
-    return petrolfed.to_records(petrolfed.fetch(since, date.today() + timedelta(days=1)))
+    return petrolfed.to_records(petrolfed.fetch(since, clock.today_brussels() + timedelta(days=1)))
 
 
 def run(
@@ -135,7 +135,7 @@ def main(argv: list[str] | None = None) -> int:
 
     conn = history.connect(args.db)
     try:
-        failed = run(conn, date.today(), fetch_max=fetch_max)
+        failed = run(conn, clock.today_brussels(), fetch_max=fetch_max)
     finally:
         conn.close()
     # The official max prices are the point of the job: fail when neither source delivered them.

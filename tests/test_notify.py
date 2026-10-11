@@ -95,3 +95,13 @@ def test_message_is_dutch_only_by_default():
     assert "Wait until tomorrow (Wed 07/10): the maximum price drops 4.0 cent/L" in english
     _, only_english = notify.build_message(data, ("en",))
     assert "\n\n" not in only_english
+
+
+def test_stale_advice_is_not_sent(tmp_path):
+    from datetime import date
+
+    cur = write(tmp_path / "c.json", {**advice(diesel="fill_up_today"), "as_of": "2026-10-09"})
+    out = notify.run(cur, None, "topic", True, True, today=date(2026, 10, 11))
+    assert "not today" in out
+    fresh = notify.run(cur, None, "topic", True, True, today=date(2026, 10, 9))
+    assert "Dry run" in fresh and "Advies voor vr 09/10" in fresh

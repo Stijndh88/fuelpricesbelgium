@@ -44,14 +44,16 @@ EUR_USD = 1.10
 # Refining and transport on top of crude, EUR/L, so the band is a share of a realistic product
 # cost rather than of crude alone. A rough average, not a quotation.
 REFINING_EUR_PER_LITRE = 0.15
-# Brent prices older than this are too stale to say anything about today.
-MAX_BRENT_AGE_DAYS = 7
+# Market prices older than this are too stale to say anything about today (a Friday close still
+# counts on Monday).
+MAX_BRENT_AGE_DAYS = 4
 
 ADVISED_PRODUCTS = {Product.DIESEL_B7: "diesel_max", Product.E10: "e10_max"}
 
 # A move of the market of at least this fraction over SHOCK_DAYS calendar days counts as a shock.
 SHOCK_THRESHOLD = 0.05
 SHOCK_DAYS = 5
+PASS_THROUGH_DAYS = 2  # a max price already reflects the market of this many days before it
 BACKTEST_DAYS = 365  # the backtest looks at the most recent year only
 LITRES_PER_GALLON = 3.78541
 # Market series checked for shocks per product: (history column, name in the reason).
@@ -156,15 +158,26 @@ def _to_eur_per_litre(column: str, value: float) -> float:
 
 
 def market_moves(
-    product: Product, rows: dict[date, DailyPrices], today: date, days: int = SHOCK_DAYS
+    product: Product,
+    rows: dict[date, DailyPrices],
+    today: date,
+    days: int = SHOCK_DAYS,
+    not_before: date | None = None,
 ) -> list[MarketMove]:
-    """How much each market series for ``product`` moved over the last ``days`` days."""
+    """How much each market series for ``product`` moved over the last ``days`` days.
+
+    ``not_before`` stops the window from reaching back past the market level the current max
+    price was set from: a move that already went into the price is not a coming change.
+    """
     moves = []
     for column, name in SHOCK_SERIES[product]:
         latest = _value_on_or_before(rows, column, today)
         if latest is None or (today - latest[0]).days > MAX_BRENT_AGE_DAYS:
             continue
-        start = _value_on_or_before(rows, column, latest[0] - timedelta(days=days))
+        start_day = latest[0] - timedelta(days=days)
+        if not_before is not None and not_before > start_day:
+            start_day = not_before
+        start = _value_on_or_before(rows, column, start_day)
         if start is None or (latest[0] - start[0]).days > days + 3:
             continue
         eur = _to_eur_per_litre(column, latest[1]) - _to_eur_per_litre(column, start[1])
@@ -253,7 +266,10 @@ def advise(
     next_change = next_possible_change(today)
     big_move = None
     if shock_threshold is not None:
-        big_move = shock(market_moves(product, by_day, today), shock_threshold)
+        # A price set on day C reflects the market of about two days earlier.
+        changed_on = _last_change(by_day, today, column)
+        settled = changed_on - timedelta(days=PASS_THROUGH_DAYS) if changed_on else None
+        big_move = shock(market_moves(product, by_day, today, not_before=settled), shock_threshold)
     note = big_move.params if big_move else None
 
     def make(action, code, params, change, basis, next_day=None):
@@ -333,7 +349,7 @@ def _gasoil_advice(by_day, today, column, schedule, make_any, next_change, trust
     ]
     now = known[0] if known else None
     base = by_day.get(changed_on) if changed_on else None
-    if now is None or base is None or not base.heating_oil_max:
+    if now is None or base is None or not base.heating_oil_max or now.day <= changed_on:
         return None
     if (today - now.day).days > MAX_BRENT_AGE_DAYS:
         return None
@@ -497,6 +513,7 @@ def export(
     thresholds = [None] if shock_threshold is None else [None, shock_threshold]
     return {
         "as_of": today.isoformat(),
+        "market_as_of": _market_as_of(rows, today),
         "shock_threshold": shock_threshold,
         "advice": [
             asdict(
@@ -519,6 +536,12 @@ def export(
             for t in thresholds
         ],
     }
+
+
+def _market_as_of(rows, today: date) -> str | None:
+    """The newest day with a market price (Brent) up to today, to spot a missed data pull."""
+    days = [r.day for r in rows if r.day <= today and r.brent_usd is not None]
+    return max(days).isoformat() if days else None
 
 
 def _calibration_summary(c: calibrate.Calibration) -> dict:

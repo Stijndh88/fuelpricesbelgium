@@ -11,13 +11,18 @@ on:
         type: boolean
         default: false
   schedule:
-    # Once a day at 10:00 Belgian time, when the morning's official prices and the newsletter's
+    # Once a day from 10:00 Belgian time, when the morning's official prices and the newsletter's
     # market data are out (the FOD price for tomorrow appears around 07:45 UTC). GitHub cron is
-    # UTC only and Belgium switches between UTC+2 and UTC+1, so two entries fire (08:00 and 09:00
-    # UTC) and the gate job lets through only the one that is 10 o'clock in Brussels. Scheduled
-    # runs can start a few minutes late; one that starts after 10:59 Brussels time is skipped.
+    # UTC only and often hours late (or skipped), and Belgium switches between UTC+2 and UTC+1,
+    # so several entries fire and the gate job lets through the first one that is at or past 10:00
+    # in Brussels while data/advice.json is not yet from today's Brussels date.
     - cron: "0 8 * * *"
     - cron: "0 9 * * *"
+    - cron: "30 10 * * *"
+    - cron: "0 12 * * *"
+    - cron: "0 14 * * *"
+    - cron: "0 16 * * *"
+    - cron: "0 18 * * *"
 
 permissions:
   contents: write
@@ -32,11 +37,14 @@ jobs:
     outputs:
       run: ${{ steps.hour.outputs.run }}
     steps:
+      - uses: actions/checkout@v4
       - id: hour
         run: |
           hour="$(TZ=Europe/Brussels date +%H)"
-          echo "Brussels hour: $hour (event: $GITHUB_EVENT_NAME)"
-          if [ "$GITHUB_EVENT_NAME" != schedule ] || [ "$hour" = 10 ]; then
+          today="$(TZ=Europe/Brussels date +%F)"
+          done_for="$(jq -r '.as_of // empty' data/advice.json 2>/dev/null || true)"
+          echo "Brussels: $today $hour h, advice is from: ${done_for:-none} (event: $GITHUB_EVENT_NAME)"
+          if [ "$GITHUB_EVENT_NAME" != schedule ] || { [ "$((10#$hour))" -ge 10 ] && [ "$done_for" != "$today" ]; }; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"

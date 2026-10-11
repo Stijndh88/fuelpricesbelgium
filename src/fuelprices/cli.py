@@ -6,7 +6,7 @@ import argparse
 from datetime import date
 from pathlib import Path
 
-from fuelprices import advice, calibrate, history, storage
+from fuelprices import advice, calibrate, clock, history, storage
 from fuelprices.sources import fod
 
 DEFAULT_HISTORY = Path("data/max_prices.csv")
@@ -31,7 +31,7 @@ def _show(args: argparse.Namespace) -> None:
 
 
 def _advise(args: argparse.Namespace) -> None:
-    today = args.date or date.today()
+    today = args.date or clock.today_brussels()
     if args.shock_threshold is not None and args.shock_threshold <= 0:
         args.shock_threshold = None
     conn = history.connect(args.db)

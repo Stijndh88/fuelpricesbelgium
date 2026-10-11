@@ -157,6 +157,9 @@ function renderAdvice(data) {
     return;
   }
   box.replaceChildren(...items);
+  if (data.as_of && data.as_of < brusselsToday()) {
+    box.prepend(el("p", { class: "advice-stale" }, "⚠ " + t("advice_stale", { day: fmtDay(data.as_of) })));
+  }
   const codes = Array.isArray(data.caveat_codes) ? data.caveat_codes : [];
   const caveats = (Array.isArray(data.caveats) ? data.caveats : []).map((text, i) =>
     codes[i] && hasText("caveats." + codes[i]) ? t("caveats." + codes[i]) : text,
