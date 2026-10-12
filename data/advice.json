@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-11",
-  "market_as_of": "2026-10-09",
+  "as_of": "2026-10-12",
+  "market_as_of": "2026-10-12",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -8,19 +8,19 @@
       "label": "Diesel B7",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 105 to 105 USD since 10/10: inside the band, no change expected by Tue 13/10.",
+      "reason": "Wholesale gasoil price (via the heating oil max price) 1.597 to 1.558 EUR/L since 10/10: inside the band, no change expected by Wed 14/10.",
       "expected_change_cents": 0.0,
-      "basis": "brent",
+      "basis": "gasoil",
       "price_today": 2.492,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-10-13",
+      "price_tomorrow": 2.492,
+      "next_possible_change": "2026-10-14",
       "market_note": null,
-      "reason_code": "brent_inside_band",
+      "reason_code": "gasoil_inside_band",
       "reason_params": {
-        "brent_from": 104.72,
-        "brent_to": 104.72,
+        "cost_from": 1.597,
+        "cost_to": 1.558,
         "since": "2026-10-10",
-        "when": "2026-10-13"
+        "when": "2026-10-14"
       },
       "market_note_params": null,
       "is_guess": true,
@@ -29,47 +29,49 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "fill_by",
-      "headline": "Fill up by Mon 12/10",
-      "reason": "Brent 102 to 105 USD since 02/10: a rise is possible from Tue 13/10 (a guess).",
-      "expected_change_cents": 1.7,
-      "basis": "brent",
+      "action": "fill_up_today",
+      "headline": "Fill up today",
+      "reason": "Fill up today: the maximum price rises 4.0 cent/L tomorrow (Tue 13/10), 2.065 to 2.105 (published).",
+      "expected_change_cents": 4.0,
+      "basis": "published",
       "price_today": 2.065,
-      "price_tomorrow": null,
+      "price_tomorrow": 2.105,
       "next_possible_change": "2026-10-13",
-      "market_note": null,
-      "reason_code": "brent_fill_guess",
+      "market_note": "Big market move: Brent +6.7% since 07/10.",
+      "reason_code": "fill_published",
       "reason_params": {
-        "brent_from": 102.31,
-        "brent_to": 104.72,
-        "since": "2026-10-02",
-        "when": "2026-10-13"
+        "day": "2026-10-13",
+        "cents": 4.0,
+        "today": 2.065,
+        "tomorrow": 2.105
       },
-      "market_note_params": null,
-      "is_guess": true,
-      "headline_params": {
-        "day": "2026-10-12"
-      }
+      "market_note_params": {
+        "name": "Brent",
+        "pct": 6.7,
+        "since": "2026-10-07"
+      },
+      "is_guess": false,
+      "headline_params": null
     }
   ],
   "calibration": {
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-15",
-      "held_out_to": "2026-10-11",
+      "held_out_from": "2026-04-17",
+      "held_out_to": "2026-10-13",
       "real_changes": 38,
-      "precision": 0.75,
+      "precision": 0.73,
       "recall": 0.63
     },
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-15",
-      "held_out_to": "2026-10-11",
+      "held_out_from": "2026-04-17",
+      "held_out_to": "2026-10-13",
       "real_changes": 25,
-      "precision": 0.39,
-      "recall": 0.28
+      "precision": 0.35,
+      "recall": 0.24
     }
   },
   "caveats": [
@@ -93,28 +95,28 @@
       "product": "diesel_b7",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 228,
-      "same": 73,
+      "saved": 230,
+      "same": 71,
       "lost": 59,
-      "avg_saving_cents": 1.72,
+      "avg_saving_cents": 1.75,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "diesel_b7",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 243,
-      "same": 72,
+      "saved": 245,
+      "same": 70,
       "lost": 45,
-      "avg_saving_cents": 2.07,
+      "avg_saving_cents": 2.1,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "e10",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 187,
-      "same": 141,
+      "saved": 186,
+      "same": 142,
       "lost": 32,
       "avg_saving_cents": 1.02,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
@@ -123,10 +125,10 @@
       "product": "e10",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 188,
-      "same": 141,
+      "saved": 187,
+      "same": 142,
       "lost": 31,
-      "avg_saving_cents": 1.05,
+      "avg_saving_cents": 1.04,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
