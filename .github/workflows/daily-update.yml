@@ -10,6 +10,10 @@ on:
         description: "Send the notification even when the advice did not change"
         type: boolean
         default: false
+      only_if_missing:
+        description: "Skip unless it is 10:00 Belgian time or later and today's advice is missing (for an external scheduler)"
+        type: boolean
+        default: false
   schedule:
     # Once a day from 10:00 Belgian time, when the morning's official prices and the newsletter's
     # market data are out (the FOD price for tomorrow appears around 07:45 UTC). GitHub cron is
@@ -36,12 +40,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - id: hour
+        env:
+          ONLY_IF_MISSING: ${{ inputs.only_if_missing }}
         run: |
           hour="$(TZ=Europe/Brussels date +%H)"
           today="$(TZ=Europe/Brussels date +%F)"
           done_for="$(jq -r '.as_of // empty' data/advice.json 2>/dev/null || true)"
           echo "Brussels: $today $hour h, advice is from: ${done_for:-none} (event: $GITHUB_EVENT_NAME)"
-          if [ "$GITHUB_EVENT_NAME" != schedule ] || { [ "$((10#$hour))" -ge 10 ] && [ "$done_for" != "$today" ]; }; then
+          guarded="$GITHUB_EVENT_NAME"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "${ONLY_IF_MISSING:-false}" = true ]; then guarded=schedule; fi
+          if [ "$guarded" != schedule ] || { [ "$((10#$hour))" -ge 10 ] && [ "$done_for" != "$today" ]; }; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
