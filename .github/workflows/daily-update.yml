@@ -16,13 +16,10 @@ on:
     # UTC only and often hours late (or skipped), and Belgium switches between UTC+2 and UTC+1,
     # so several entries fire and the gate job lets through the first one that is at or past 10:00
     # in Brussels while data/advice.json is not yet from today's Brussels date.
-    - cron: "0 8 * * *"
-    - cron: "0 9 * * *"
-    - cron: "30 10 * * *"
-    - cron: "0 12 * * *"
-    - cron: "0 14 * * *"
-    - cron: "0 16 * * *"
-    - cron: "0 18 * * *"
+    # Off-peak minutes (the top of the hour is the busiest) and every half hour, so one of them
+    # is likely to get through on a busy day. Extra entries cost nothing: the gate skips them.
+    - cron: "17 8-20 * * *"
+    - cron: "47 8-20 * * *"
 
 permissions:
   contents: write
