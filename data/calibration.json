@@ -8,18 +8,18 @@
       "recenter": "day"
     },
     "train_from": "2019-04-01",
-    "train_to": "2026-04-17",
-    "test_from": "2026-04-18",
-    "test_to": "2026-10-14",
+    "train_to": "2026-04-18",
+    "test_from": "2026-04-19",
+    "test_to": "2026-10-15",
     "train": {
-      "hits": 172,
+      "hits": 173,
       "misses": 144,
-      "false_alarms": 172,
+      "false_alarms": 171,
       "same_day": 95
     },
     "test": {
       "hits": 23,
-      "misses": 16,
+      "misses": 15,
       "false_alarms": 9,
       "same_day": 13
     },
@@ -37,9 +37,9 @@
       "recenter": "average"
     },
     "train_from": "2019-04-02",
-    "train_to": "2026-04-17",
-    "test_from": "2026-04-18",
-    "test_to": "2026-10-14",
+    "train_to": "2026-04-18",
+    "test_from": "2026-04-19",
+    "test_to": "2026-10-15",
     "train": {
       "hits": 111,
       "misses": 137,
@@ -47,12 +47,12 @@
       "same_day": 33
     },
     "test": {
-      "hits": 6,
+      "hits": 7,
       "misses": 18,
       "false_alarms": 11,
-      "same_day": 4
+      "same_day": 5
     },
-    "pass_through": 0.816,
+    "pass_through": 0.815,
     "trusted": false,
     "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
     "cost_source": "New York futures stand-in"
