@@ -18,6 +18,7 @@ class Product(Enum):
     """A fuel with an official maximum price, with the rule that governs its changes."""
 
     E10 = ("e10", "Benzine 95 RON E10", ChangeRule.THRESHOLD)
+    E5_95 = ("e5_95", "Benzine 95 RON E5", ChangeRule.THRESHOLD)
     E5_98 = ("e5_98", "Benzine 98 RON E5", ChangeRule.THRESHOLD)
     DIESEL_B7 = ("diesel_b7", "Diesel B7", ChangeRule.THRESHOLD)
     HEATING_OIL = ("heating_oil", "Gasolie verwarming vanaf 2000 l", ChangeRule.DAILY)
@@ -49,6 +50,7 @@ def _normalise(text: str) -> str:
 # (Dutch or French). Order matters: the first match wins.
 _NAME_PATTERNS: list[tuple[re.Pattern[str], Product]] = [
     (re.compile(r"\b95\b.*\be10\b"), Product.E10),
+    (re.compile(r"\b95\b.*\be5\b"), Product.E5_95),
     (re.compile(r"\b98\b.*\be5\b"), Product.E5_98),
     (re.compile(r"\bdiesel b7\b"), Product.DIESEL_B7),
     (

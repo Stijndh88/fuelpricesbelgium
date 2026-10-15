@@ -55,7 +55,7 @@ def broken(*_):
 
 def test_to_daily_keeps_diesel_and_e10_per_day():
     assert update.to_daily(official()) == [
-        DailyPrices(day=TODAY, diesel_max=2.432, e10_max=2.065),
+        DailyPrices(day=TODAY, diesel_max=2.432, e10_max=2.065, e5_98_max=2.259),
         DailyPrices(day=TOMORROW, diesel_max=2.392),
     ]
 
@@ -64,9 +64,9 @@ def test_run_stores_all_sources_and_fills_forward(conn):
     assert run(conn, TODAY, fetch_max=official, fetch_brent=brent) == []
     assert history.all_rows(conn) == [
         DailyPrices(day=date(2026, 10, 2), brent_usd=101.0),
-        DailyPrices(day=TODAY, diesel_max=2.432, e10_max=2.065, brent_usd=99.0),
+        DailyPrices(day=TODAY, diesel_max=2.432, e10_max=2.065, e5_98_max=2.259, brent_usd=99.0),
         # E10 did not change, so tomorrow keeps today's price.
-        DailyPrices(day=TOMORROW, diesel_max=2.392, e10_max=2.065),
+        DailyPrices(day=TOMORROW, diesel_max=2.392, e10_max=2.065, e5_98_max=2.259),
     ]
 
 
@@ -81,7 +81,9 @@ def test_missed_days_get_the_last_known_price(conn):
     run(conn, TODAY, fetch_max=official, fetch_brent=brent)
     later = TODAY + timedelta(days=4)
     run(conn, later, fetch_max=broken, fetch_brent=lambda _: {})
-    assert history.get(conn, later) == DailyPrices(day=later, diesel_max=2.392, e10_max=2.065)
+    assert history.get(conn, later) == DailyPrices(
+        day=later, diesel_max=2.392, e10_max=2.065, e5_98_max=2.259
+    )
 
 
 def test_one_failing_source_keeps_the_other(conn):
@@ -150,3 +152,15 @@ def test_main_succeeds_when_only_the_fod_page_fails(tmp_path, monkeypatch):
         lambda since: [PriceRecord(date.today(), Product.DIESEL_B7, 2.4, "petrolfed")],
     )
     assert update.main(["--db", str(tmp_path / "prices.sqlite")]) == 0
+
+
+def test_to_daily_stores_e5_next_to_e10():
+    day = date(2026, 10, 7)
+    rows = update.to_daily(
+        [
+            PriceRecord(day, Product.E10, 2.065, "x"),
+            PriceRecord(day, Product.E5_95, 2.119, "x"),
+            PriceRecord(day, Product.E5_98, 2.259, "x"),
+        ]
+    )
+    assert rows == [DailyPrices(day=day, e10_max=2.065, e5_95_max=2.119, e5_98_max=2.259)]

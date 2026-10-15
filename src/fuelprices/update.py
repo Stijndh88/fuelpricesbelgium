@@ -30,6 +30,8 @@ MAX_PRICE_COLUMNS = {
     Product.DIESEL_B7: "diesel_max",
     Product.E10: "e10_max",
     Product.HEATING_OIL: "heating_oil_max",
+    Product.E5_95: "e5_95_max",
+    Product.E5_98: "e5_98_max",
 }
 
 MaxPriceFetcher = Callable[[], Iterable[PriceRecord]]
@@ -70,7 +72,7 @@ def run(
 
     try:
         rows = to_daily(fetch_max())
-        if not rows:
+        if not any(r.diesel_max is not None or r.e10_max is not None for r in rows):
             raise ValueError("no diesel or E10 price in the official prices")
     except Exception:
         log.exception("official max prices: fetch failed")
