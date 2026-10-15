@@ -51,6 +51,20 @@ const I18N = {
     headlines: { wait: "Wait", fill_up_today: "Fill up today", fill_by: "Fill up by {day}", no_difference: "No difference" },
     market_names: { "Diesel futures": "Diesel futures", "Gasoline futures": "Gasoline futures", Brent: "Brent" },
     advice_unknown: "Advice text not available in this page version; reload the page.",
+    outlooks: {
+      outlook_rise_small:
+        "Outlook (uncertain): if wholesale prices hold, a rise of about {cents} cent/L by {until} is possible, but not likely (about 3 in 10 in the past).",
+      outlook_rise_fair:
+        "Outlook (uncertain): if wholesale prices hold, a rise of about {cents} cent/L by {until} is a fair chance (about 4 in 10 in the past).",
+      outlook_rise_likely:
+        "Outlook (uncertain): if wholesale prices hold, a rise of about {cents} cent/L by {until} is likely (about 2 in 3 in the past).",
+      outlook_fall_small:
+        "Outlook (uncertain): if wholesale prices hold, a drop of about {cents} cent/L by {until} is possible, but not likely (about 3 in 10 in the past).",
+      outlook_fall_fair:
+        "Outlook (uncertain): if wholesale prices hold, a drop of about {cents} cent/L by {until} is a fair chance (about 4 in 10 in the past).",
+      outlook_fall_likely:
+        "Outlook (uncertain): if wholesale prices hold, a drop of about {cents} cent/L by {until} is likely (about 2 in 3 in the past).",
+    },
     market_note: "Big market move: {name} {pct} since {since}.",
     reasons: {
       no_price_today: "No maximum price known for today.",
@@ -138,6 +152,20 @@ const I18N = {
     headlines: { wait: "Wacht", fill_up_today: "Tank vandaag", fill_by: "Tank uiterlijk {day}", no_difference: "Geen verschil" },
     market_names: { "Diesel futures": "Diesel-futures", "Gasoline futures": "Benzine-futures", Brent: "Brent" },
     advice_unknown: "Adviestekst niet beschikbaar in deze paginaversie; laad de pagina opnieuw.",
+    outlooks: {
+      outlook_rise_small:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een stijging van ongeveer {cents} cent/L tegen {until} mogelijk, maar niet waarschijnlijk (vroeger ongeveer 3 op 10).",
+      outlook_rise_fair:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een stijging van ongeveer {cents} cent/L tegen {until} een redelijke kans (vroeger ongeveer 4 op 10).",
+      outlook_rise_likely:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een stijging van ongeveer {cents} cent/L tegen {until} waarschijnlijk (vroeger ongeveer 2 op 3).",
+      outlook_fall_small:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een daling van ongeveer {cents} cent/L tegen {until} mogelijk, maar niet waarschijnlijk (vroeger ongeveer 3 op 10).",
+      outlook_fall_fair:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een daling van ongeveer {cents} cent/L tegen {until} een redelijke kans (vroeger ongeveer 4 op 10).",
+      outlook_fall_likely:
+        "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals nu, is een daling van ongeveer {cents} cent/L tegen {until} waarschijnlijk (vroeger ongeveer 2 op 3).",
+    },
     market_note: "Grote marktbeweging: {name} {pct} sinds {since}.",
     reasons: {
       no_price_today: "Geen maximumprijs bekend voor vandaag.",

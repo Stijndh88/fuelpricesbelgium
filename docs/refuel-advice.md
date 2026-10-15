@@ -57,6 +57,26 @@ the shock flag off and once at the configured threshold, so the JSON shows wheth
 helps; try other thresholds with `fuelprices advise --shock-threshold 0.03`. The history only
 started on 7 October 2026, so it reports "not enough history" until a week of prices is stored.
 
+## Outlook line (diesel only)
+
+Under the diesel advice there can be one extra, clearly uncertain line (`outlook`, with
+`outlook_code` and `outlook_params`): "if the wholesale prices hold, a rise of about X cent/L by
+day D is possible". It never changes the action. It comes from the same official gasoil cost as
+the gasoil step, measured as a multiple of the (unconfirmed) band at the next possible change.
+The wording follows how often that signal was followed by a change in the same direction within
+two days in the 2019 to October 2026 history:
+
+| cost move vs band | wording | how often it came true |
+|---|---|---|
+| below 0.75 | no line | at most 1 in 6 |
+| 0.75 to 1 | possible, but not likely | about 3 in 10 |
+| 1 to 1.5 | a fair chance | about 4 in 10 |
+| 1.5 or more | likely | about 2 in 3 |
+
+Direction is almost always right; the timing is what misses. The line is left out once a trusted
+calibration exists (the guess is then the advice itself), for petrol, and when the price for
+tomorrow is published. Re-measure the table when the band widths change.
+
 ## Notifications
 
 The daily workflow can push the advice to a [ntfy](https://ntfy.sh) topic; anyone subscribes in

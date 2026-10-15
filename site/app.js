@@ -111,7 +111,7 @@ function adviceParams(params) {
   const out = {};
   // advice.json writes null (not undefined) when a text has no parameters
   for (const [key, value] of Object.entries(params || {})) {
-    if (["day", "when"].includes(key)) out[key] = fmtDay(value);
+    if (["day", "when", "until"].includes(key)) out[key] = fmtDay(value);
     else if (key === "since") out[key] = fmtShortDay(value);
     else if (key === "pct") out[key] = (value > 0 ? "+" : "") + num(value, 1) + "%";
     else if (key === "name") out[key] = hasText("market_names." + value) ? t("market_names." + value) : value;
@@ -149,6 +149,9 @@ function renderAdvice(data) {
           ? t("market_note", adviceParams(a.market_note_params))
           : a.market_note;
         item.append(el("div", { class: "advice-reason" }, "⚠ " + note));
+      }
+      if (a.outlook_code && hasText("outlooks." + a.outlook_code)) {
+        item.append(el("div", { class: "advice-outlook" }, t("outlooks." + a.outlook_code, adviceParams(a.outlook_params))));
       }
       return item;
     });
