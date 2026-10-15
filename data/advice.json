@@ -24,34 +24,43 @@
       },
       "market_note_params": null,
       "is_guess": true,
-      "headline_params": null
+      "headline_params": null,
+      "outlook": "Outlook (uncertain): if wholesale prices hold, a rise of about 3.6 cent/L by Sat 17/10 is possible, but not likely (about 3 in 10 in the past).",
+      "outlook_code": "outlook_rise_small",
+      "outlook_params": {
+        "until": "2026-10-17",
+        "cents": 3.6
+      }
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Gasoline futures -5.3% since 13/10: a drop is likely from Sat 17/10 or soon after.",
-      "expected_change_cents": -5.0,
+      "reason": "Gasoline futures -5.7% since 13/10: a drop is likely from Sat 17/10 or soon after.",
+      "expected_change_cents": -5.4,
       "basis": "shock",
       "price_today": 2.064,
       "price_tomorrow": 2.064,
       "next_possible_change": "2026-10-17",
-      "market_note": "Big market move: Gasoline futures -5.3% since 13/10.",
+      "market_note": "Big market move: Gasoline futures -5.7% since 13/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Gasoline futures",
-        "pct": -5.3,
+        "pct": -5.7,
         "since": "2026-10-13",
         "when": "2026-10-17"
       },
       "market_note_params": {
         "name": "Gasoline futures",
-        "pct": -5.3,
+        "pct": -5.7,
         "since": "2026-10-13"
       },
       "is_guess": true,
-      "headline_params": null
+      "headline_params": null,
+      "outlook": null,
+      "outlook_code": null,
+      "outlook_params": null
     }
   ],
   "calibration": {
