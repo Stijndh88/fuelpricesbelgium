@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS daily_prices (
     day            TEXT PRIMARY KEY,  -- ISO date the prices are valid on
     diesel_max     REAL,              -- official max price diesel B7, EUR/L incl. VAT
     e10_max        REAL,              -- official max price petrol E10 (95), EUR/L incl. VAT
+    e5_95_max      REAL,              -- official max price petrol E5 95, EUR/L (compared with E10)
+    e5_98_max      REAL,              -- official max price petrol E5 98, EUR/L (compared with E10)
     heating_oil_max REAL,             -- official max price heating oil (2000 L+), EUR/L incl. VAT
     diesel_product REAL,              -- wholesale product cost diesel, EUR/L (rules input)
     e10_product    REAL,              -- wholesale product cost petrol, EUR/L (rules input)
@@ -35,6 +37,8 @@ VALUE_COLUMNS = (
     "diesel_max",
     "e10_max",
     "heating_oil_max",
+    "e5_95_max",
+    "e5_98_max",
     "diesel_product",
     "e10_product",
     "brent_usd",
@@ -50,6 +54,8 @@ class DailyPrices:
     diesel_max: float | None = None
     e10_max: float | None = None
     heating_oil_max: float | None = None
+    e5_95_max: float | None = None
+    e5_98_max: float | None = None
     diesel_product: float | None = None
     e10_product: float | None = None
     brent_usd: float | None = None
@@ -121,6 +127,8 @@ def fill_forward(conn: sqlite3.Connection, until: date) -> int:
             if current.diesel_max is not None
             else previous.diesel_max,
             e10_max=current.e10_max if current.e10_max is not None else previous.e10_max,
+            e5_95_max=current.e5_95_max if current.e5_95_max is not None else previous.e5_95_max,
+            e5_98_max=current.e5_98_max if current.e5_98_max is not None else previous.e5_98_max,
         )
         if filled != current:
             upsert(conn, filled)

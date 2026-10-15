@@ -8,6 +8,8 @@ by the "Daily price update" GitHub Action (`python -m fuelprices.update`).
 | `day` | date the prices are valid on | ISO date | |
 | `diesel_max` | official maximum price, diesel B7 | EUR/L incl. VAT | FOD Economie, petrolfed.be (daily series since 2011) |
 | `e10_max` | official maximum price, petrol E10 (95) | EUR/L incl. VAT | FOD Economie, petrolfed.be (daily series since 2011) |
+| `e5_95_max` | official maximum price, petrol E5 (95). Stored from 15 Oct 2026 only to check whether E5 moves exactly like E10; not used in the advice | EUR/L incl. VAT | petrolfed.be export (tid 27) |
+| `e5_98_max` | official maximum price, petrol E5 (98). Same purpose; only days the FOD page was fetched, carried forward over weekends | EUR/L incl. VAT | FOD Economie |
 | `heating_oil_max` | official maximum price, heating oil H0/H7 (2000 L and up). No band: follows the gasoil cost daily, used as the official diesel cost in `fuelprices calibrate` | EUR/L incl. VAT | petrolfed.be export (tid 75), FOD Economie |
 | `diesel_product` | wholesale product cost, diesel | EUR/L (as used by `fuelprices.rules`) | not sourced yet |
 | `e10_product` | wholesale product cost, petrol | EUR/L (as used by `fuelprices.rules`) | not sourced yet |

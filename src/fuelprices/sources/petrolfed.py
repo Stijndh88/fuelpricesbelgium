@@ -23,7 +23,13 @@ USER_AGENT = "fuelpricesbelgium (+https://github.com/Stijndh88/fuelpricesbelgium
 # taxonomy_tid of the products we track in the JSON series.
 # Heating oil (H0/H7, 2000 L and up) has no band: its max price follows the product cost of the
 # day, which makes it the official daily gasoil cost the diesel rules are fitted on.
-PRODUCT_TIDS = {"31": Product.DIESEL_B7, "28": Product.E10, "75": Product.HEATING_OIL}
+# Petrol E5 (95) is tracked only to compare its moves with E10 (it has its own series, tid 27).
+PRODUCT_TIDS = {
+    "31": Product.DIESEL_B7,
+    "28": Product.E10,
+    "75": Product.HEATING_OIL,
+    "27": Product.E5_95,
+}
 
 
 def parse(text: str) -> dict[Product, dict[date, float]]:
