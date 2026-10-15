@@ -11,6 +11,11 @@ def test_every_code_has_both_languages_and_the_same_parameters():
         assert names == dutch, code
     for entry in messages.CAVEATS.values():
         assert set(entry) == {"en", "nl"}
+    assert set(messages.OUTLOOKS["nl"]) == set(messages.OUTLOOKS["en"])
+    for code, english in messages.OUTLOOKS["en"].items():
+        names = {f for _, f, _, _ in string.Formatter().parse(english) if f}
+        dutch = {f for _, f, _, _ in string.Formatter().parse(messages.OUTLOOKS["nl"][code]) if f}
+        assert names == dutch, code
 
 
 def test_advice_json_carries_codes_for_every_text(tmp_path):
@@ -38,7 +43,7 @@ def test_dashboard_table_has_every_code_in_both_languages():
     from pathlib import Path
 
     table = (Path(__file__).parent.parent / "site" / "i18n.js").read_text(encoding="utf-8")
-    for code in [*messages.REASONS["en"], *messages.CAVEATS]:
+    for code in [*messages.REASONS["en"], *messages.CAVEATS, *messages.OUTLOOKS["en"]]:
         assert table.count(f"\n      {code}:") == 2, code
 
 
@@ -61,6 +66,7 @@ def _english_words(text):
 def test_dutch_templates_contain_no_english_words():
     texts = {f"reasons.{c}": t for c, t in messages.REASONS["nl"].items()}
     texts["market_note"] = messages.MARKET_NOTE["nl"]
+    texts.update({f"outlooks.{c}": t for c, t in messages.OUTLOOKS["nl"].items()})
     texts.update({f"caveats.{c}": v["nl"] for c, v in messages.CAVEATS.items()})
     texts.update({f"headlines.{c}": t for c, t in messages.HEADLINES["nl"].items()})
     for key, text in texts.items():

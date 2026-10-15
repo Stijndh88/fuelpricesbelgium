@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from collections.abc import Sequence
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -84,6 +84,9 @@ class Advice:
     market_note_params: dict | None = None
     is_guess: bool = True  # False only for a published price or a rules fit that passed its test
     headline_params: dict | None = None  # the last day at the current price, for "fill_by"
+    outlook: str | None = None  # extra, uncertain line: a change that may follow soon
+    outlook_code: str | None = None
+    outlook_params: dict | None = None
 
 
 @dataclass(frozen=True)
@@ -248,6 +251,34 @@ def advise(
     shock_threshold: float | None = SHOCK_THRESHOLD,
     calibration: calibrate.Calibration | None = None,
 ) -> Advice:
+    """The advice, plus (diesel only) an uncertain outlook line when the gasoil cost points to a
+    change just beyond what the published price shows. The action never depends on the outlook."""
+    result = _advise_core(product, rows, today, schedule, shock_threshold, calibration)
+    trusted = calibration is not None and calibration.trusted and calibration.params is not None
+    if product is not Product.DIESEL_B7 or trusted or result.basis == "published":
+        return result
+    by_day = {r.day: r for r in rows if r.day <= today + timedelta(days=1)}
+    next_change = date.fromisoformat(result.next_possible_change)
+    outlook = _outlook(by_day, today, ADVISED_PRODUCTS[product], schedule, next_change)
+    if outlook is None:
+        return result
+    code, params = outlook
+    return replace(
+        result,
+        outlook=messages.outlook(code, params),
+        outlook_code=code,
+        outlook_params=params,
+    )
+
+
+def _advise_core(
+    product: Product,
+    rows: Sequence[DailyPrices],
+    today: date,
+    schedule: rules.ThresholdSchedule = rules.UNCONFIRMED_SCHEDULE,
+    shock_threshold: float | None = SHOCK_THRESHOLD,
+    calibration: calibrate.Calibration | None = None,
+) -> Advice:
     """Advise whether to refuel ``product`` today, using only ``rows`` (the stored history).
 
     Rows dated after tomorrow are ignored, so the same function replays history in the backtest.
@@ -334,12 +365,12 @@ def advise(
     return _brent_advice(product, by_day, today, column, schedule, make, next_change, basis)
 
 
-def _gasoil_advice(by_day, today, column, schedule, make_any, next_change, trusted):
-    """Diesel guess from the official daily gasoil cost (the heating oil max price), if stored.
+def _gasoil_signal(by_day, today, column, schedule, next_change):
+    """The official gasoil cost against the cost the diesel price in force was set from.
 
-    The heating oil price valid on day D+1 is the cost of working day D, without a band, so the
-    cost of today is known this morning. The diesel price in force was set from the cost of the
-    day before its start (``heating[changed_on]``). Returns None when that history is missing.
+    Returns ``(expected, ratio, params)`` or None when that history is missing. ``expected`` is
+    the pump price move in EUR/L incl. VAT that the cost move implies, ``ratio`` the size of the
+    cost move relative to the band at the next possible change (1.0: right on the edge).
     """
     changed_on = _last_change(by_day, today, column)
     known = [
@@ -358,19 +389,62 @@ def _gasoil_advice(by_day, today, column, schedule, make_any, next_change, trust
     base_cost = base.heating_oil_max / (1 + rules.VAT_RATE)
     days_since = _working_days_between(changed_on, next_change)
     band = schedule.at(days_since) * base_cost
+    ratio = abs(expected) / (1 + rules.VAT_RATE) / band
     params = {
         "cost_from": base.heating_oil_max,
         "cost_to": now.heating_oil_max,
         "since": changed_on.isoformat(),
         "when": next_change.isoformat(),
     }
+    return expected, ratio, params
+
+
+def _gasoil_advice(by_day, today, column, schedule, make_any, next_change, trusted):
+    """Diesel guess from the official daily gasoil cost (the heating oil max price), if stored.
+
+    The heating oil price valid on day D+1 is the cost of working day D, without a band, so the
+    cost of today is known this morning. The diesel price in force was set from the cost of the
+    day before its start (``heating[changed_on]``). Returns None when that history is missing.
+    """
+    signal = _gasoil_signal(by_day, today, column, schedule, next_change)
+    if signal is None:
+        return None
+    expected, ratio, params = signal
     basis = "rules" if trusted else "gasoil"
     guess = "" if trusted else "_guess"
-    if abs(expected) / (1 + rules.VAT_RATE) < band or abs(expected) < MIN_CHANGE_EUR:
+    if ratio < 1 or abs(expected) < MIN_CHANGE_EUR:
         return make_any("no_difference", "gasoil_inside_band", params, 0.0, basis, next_change)
     code = "gasoil_wait" if expected < 0 else "gasoil_fill"
     action = WAIT if expected < 0 else FILL_UP
     return make_any(action, f"{code}{guess}", params, expected, basis, next_change)
+
+
+# How often the gasoil cost, at this multiple of the (unconfirmed) band, was followed by a pump
+# price change in the same direction within the next two days. Measured on the 2019 to October
+# 2026 history: below 0.75 about 1 in 6 or less, 0.75 to 1 about 3 in 10, 1 to 1.5 about 4 in 10,
+# from 1.5 about 2 in 3. Re-measure when the band widths change.
+OUTLOOK_LEVELS = ((1.5, "likely"), (1.0, "fair"), (0.75, "small"))
+
+
+def _outlook(by_day, today, column, schedule, next_change):
+    """``(code, params)`` of the outlook line, or None when the signal is too weak to mention."""
+    signal = _gasoil_signal(by_day, today, column, schedule, next_change)
+    if signal is None:
+        return None
+    expected, ratio, params = signal
+    if abs(expected) < MIN_CHANGE_EUR:
+        return None
+    level = next((name for floor, name in OUTLOOK_LEVELS if ratio >= floor), None)
+    if level is None:
+        return None
+    until = next_change + timedelta(days=1)
+    if until.weekday() in (6, 0):  # no price change takes effect on a Sunday or a Monday
+        until = next_change
+    direction = "rise" if expected > 0 else "fall"
+    return f"outlook_{direction}_{level}", {
+        "until": until.isoformat(),
+        "cents": round(abs(expected) * 100, 1),
+    }
 
 
 def _brent_advice(product, by_day, today, column, schedule, make_any, next_change, basis="brent"):

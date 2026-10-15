@@ -412,3 +412,34 @@ def test_advice_json_says_which_day_it_is_for_and_how_fresh_the_market_data_is(t
     assert data["market_as_of"] == (MON + timedelta(days=1)).isoformat()
     stale = advice.export(conn, MON + timedelta(days=5))
     assert stale["market_as_of"] == (MON + timedelta(days=1)).isoformat()
+
+
+def test_outlook_strength_follows_the_gasoil_cost_move():
+    expected = {
+        1.50: None,  # well inside the band: nothing worth saying
+        1.52: "outlook_rise_small",
+        1.53: "outlook_rise_fair",
+        1.55: "outlook_rise_likely",
+        1.40: "outlook_fall_likely",
+    }
+    for heating_now, code in expected.items():
+        rows, today = _gasoil_rows(heating_now)
+        a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
+        assert a.outlook_code == code, heating_now
+        assert (a.outlook is None) == (code is None)
+
+
+def test_outlook_never_changes_the_action():
+    rows, today = _gasoil_rows(1.52)
+    a = advice.advise(Product.DIESEL_B7, rows, today, shock_threshold=None)
+    assert a.outlook_code == "outlook_rise_small"
+    assert a.action == advice.NO_DIFFERENCE
+    assert a.reason_code == "gasoil_inside_band"
+    assert a.outlook_params["cents"] == pytest.approx(3.7, abs=0.1)
+
+
+def test_no_outlook_for_petrol_or_when_the_price_is_published():
+    rows, today = _gasoil_rows(1.55)
+    assert advice.advise(Product.E10, rows, today, shock_threshold=None).outlook is None
+    published = days(MON, [2.40, 2.37])
+    assert advice.advise(Product.DIESEL_B7, published, MON).outlook is None

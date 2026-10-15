@@ -137,6 +137,45 @@ REASONS = {
     },
 }
 
+# Extra, uncertain line under the advice: a change that may follow soon. The odds in the texts
+# are how often the same signal was followed by a change in the history (see advice.OUTLOOK_LEVELS).
+OUTLOOKS = {
+    "en": {
+        "outlook_rise_small": "Outlook (uncertain): if wholesale prices hold, a rise of about "
+        "{cents} cent/L by {until} is possible, but not likely (about 3 in 10 in the past).",
+        "outlook_rise_fair": "Outlook (uncertain): if wholesale prices hold, a rise of about "
+        "{cents} cent/L by {until} is a fair chance (about 4 in 10 in the past).",
+        "outlook_rise_likely": "Outlook (uncertain): if wholesale prices hold, a rise of about "
+        "{cents} cent/L by {until} is likely (about 2 in 3 in the past).",
+        "outlook_fall_small": "Outlook (uncertain): if wholesale prices hold, a drop of about "
+        "{cents} cent/L by {until} is possible, but not likely (about 3 in 10 in the past).",
+        "outlook_fall_fair": "Outlook (uncertain): if wholesale prices hold, a drop of about "
+        "{cents} cent/L by {until} is a fair chance (about 4 in 10 in the past).",
+        "outlook_fall_likely": "Outlook (uncertain): if wholesale prices hold, a drop of about "
+        "{cents} cent/L by {until} is likely (about 2 in 3 in the past).",
+    },
+    "nl": {
+        "outlook_rise_small": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een stijging van ongeveer {cents} cent/L tegen {until} mogelijk, maar niet "
+        "waarschijnlijk (vroeger ongeveer 3 op 10).",
+        "outlook_rise_fair": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een stijging van ongeveer {cents} cent/L tegen {until} een redelijke kans "
+        "(vroeger ongeveer 4 op 10).",
+        "outlook_rise_likely": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een stijging van ongeveer {cents} cent/L tegen {until} waarschijnlijk "
+        "(vroeger ongeveer 2 op 3).",
+        "outlook_fall_small": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een daling van ongeveer {cents} cent/L tegen {until} mogelijk, maar niet "
+        "waarschijnlijk (vroeger ongeveer 3 op 10).",
+        "outlook_fall_fair": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een daling van ongeveer {cents} cent/L tegen {until} een redelijke kans "
+        "(vroeger ongeveer 4 op 10).",
+        "outlook_fall_likely": "Vooruitblik (onzeker): als de groothandelsprijzen blijven zoals "
+        "nu, is een daling van ongeveer {cents} cent/L tegen {until} waarschijnlijk "
+        "(vroeger ongeveer 2 op 3).",
+    },
+}
+
 CAVEATS = {
     "wholesale_proxy": {
         "en": "The wholesale diesel and petrol quotations that actually trigger a change are not "
@@ -192,7 +231,7 @@ def _day(lang: str, iso: str, with_weekday: bool) -> str:
 def _fill(lang: str, params: dict) -> dict:
     out = {}
     for key, value in params.items():
-        if key in ("day", "when"):
+        if key in ("day", "when", "until"):
             out[key] = _day(lang, value, True)
         elif key == "since":
             out[key] = _day(lang, value, False)
@@ -213,6 +252,10 @@ def _fill(lang: str, params: dict) -> dict:
 
 def reason(code: str, params: dict | None = None, lang: str = "en") -> str:
     return REASONS[lang][code].format(**_fill(lang, params or {}))
+
+
+def outlook(code: str, params: dict, lang: str = "en") -> str:
+    return OUTLOOKS[lang][code].format(**_fill(lang, params))
 
 
 def market_note(params: dict, lang: str = "en") -> str:
