@@ -1,6 +1,6 @@
 # Price history
 
-`prices.sqlite` holds one row per day in the table `daily_prices`, updated every day from 10:00 Belgian time (the first run after that)
+`prices.sqlite` holds one row per day in the table `daily_prices`, updated every day from 08:00 Belgian time (the first run after that, repeated until tomorrow's price is in)
 by the "Daily price update" GitHub Action (`python -m fuelprices.update`).
 
 | column | meaning | unit | source |
