@@ -1,11 +1,11 @@
 # Externe trigger voor de dagelijkse update
 
 GitHub start geplande runs soms uren te laat of helemaal niet. Een gratis externe planner kan
-de update daarom elke dag rond 10:00 Belgische tijd zelf starten. De bestaande :17/:47-schema's
+de update daarom elke dag vanaf 08:00 Belgische tijd zelf starten. De bestaande :17/:47-schema's
 blijven als reserve.
 
 De planner roept `workflow_dispatch` aan met `only_if_missing: true`. De poort slaat de run over
-als het nog geen 10:00 in Brussel is of als `data/advice.json` al van vandaag is, dus dubbel
+als het nog geen 08:00 in Brussel is, of als `data/advice.json` al van vandaag is en de prijs van morgen bevat, dus dubbel
 aanroepen kost niets.
 
 ## Instellen met cron-job.org (gratis)
@@ -16,7 +16,7 @@ aanroepen kost niets.
    Read-only). Looptijd: 1 jaar. Kopieer het token (begint met `github_pat_`).
 2. Maak een gratis account op https://cron-job.org en kies Create cronjob.
 3. URL: `https://api.github.com/repos/Stijndh88/fuelpricesbelgium/actions/workflows/daily-update.yml/dispatches`
-4. Schedule: Custom, dagelijks om 10:05, tijdzone Europe/Brussels (zo klopt het ook in de winter).
+4. Schedule: Custom, dagelijks om 08:10 (en eventueel nog eens om 09:10), tijdzone Europe/Brussels (zo klopt het ook in de winter).
    Voeg gerust een tweede entry toe om 11:05 als reserve.
 5. Advanced: Request method POST. Headers:
    - `Authorization: Bearer <je token>`

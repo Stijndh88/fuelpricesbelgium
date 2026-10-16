@@ -11,19 +11,18 @@ on:
         type: boolean
         default: false
       only_if_missing:
-        description: "Skip unless it is 10:00 Belgian time or later and today's advice is missing (for an external scheduler)"
+        description: "Skip unless it is 08:00 Belgian time or later and today's advice is missing or incomplete (for an external scheduler)"
         type: boolean
         default: false
   schedule:
-    # Once a day from 10:00 Belgian time, when the morning's official prices and the newsletter's
-    # market data are out (the FOD price for tomorrow appears around 07:45 UTC). GitHub cron is
-    # UTC only and often hours late (or skipped), and Belgium switches between UTC+2 and UTC+1,
-    # so several entries fire and the gate job lets through the first one that is at or past 10:00
-    # in Brussels while data/advice.json is not yet from today's Brussels date.
-    # Off-peak minutes (the top of the hour is the busiest) and every half hour, so one of them
-    # is likely to get through on a busy day. Extra entries cost nothing: the gate skips them.
-    - cron: "17 8-20 * * *"
-    - cron: "47 8-20 * * *"
+    # From 08:00 Belgian time, as soon as the official prices for tomorrow are out (petrolfed had
+    # them before 09:46 on 16 Oct; the 10:00 start of the first version made the advice lag the
+    # newsletter). GitHub cron is UTC only and often hours late (or skipped), and Belgium switches
+    # between UTC+2 and UTC+1, so entries fire every half hour from 06:00 UTC and the gate job
+    # lets a run through while the advice is not from today's Brussels date, or while it still
+    # lacks tomorrow's published price (until 18:00). Extra entries cost nothing: the gate skips
+    # them. Off-peak minutes, because the top of the hour is the busiest.
+    - cron: "17,47 6-20 * * *"
 
 permissions:
   contents: write
@@ -49,7 +48,9 @@ jobs:
           echo "Brussels: $today $hour h, advice is from: ${done_for:-none} (event: $GITHUB_EVENT_NAME)"
           guarded="$GITHUB_EVENT_NAME"
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "${ONLY_IF_MISSING:-false}" = true ]; then guarded=schedule; fi
-          if [ "$guarded" != schedule ] || { [ "$((10#$hour))" -ge 10 ] && [ "$done_for" != "$today" ]; }; then
+          waiting="$(jq -r '[.advice[] | select(.price_tomorrow == null)] | length' data/advice.json 2>/dev/null || echo 1)"
+          h=$((10#$hour))
+          if [ "$guarded" != schedule ] || { [ "$h" -ge 8 ] && { [ "$done_for" != "$today" ] || { [ "$waiting" -gt 0 ] && [ "$h" -lt 18 ]; }; }; }; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
