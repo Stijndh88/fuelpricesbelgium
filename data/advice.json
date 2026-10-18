@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-17",
+  "as_of": "2026-10-18",
   "market_as_of": "2026-10-16",
   "shock_threshold": 0.05,
   "advice": [
@@ -62,8 +62,8 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-21",
-      "held_out_to": "2026-10-17",
+      "held_out_from": "2026-04-22",
+      "held_out_to": "2026-10-18",
       "real_changes": 39,
       "precision": 0.72,
       "recall": 0.59
@@ -71,8 +71,8 @@
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-21",
-      "held_out_to": "2026-10-17",
+      "held_out_from": "2026-04-22",
+      "held_out_to": "2026-10-18",
       "real_changes": 25,
       "precision": 0.39,
       "recall": 0.28
@@ -99,20 +99,20 @@
       "product": "diesel_b7",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 230,
+      "saved": 229,
       "same": 69,
-      "lost": 61,
-      "avg_saving_cents": 1.75,
+      "lost": 62,
+      "avg_saving_cents": 1.74,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "diesel_b7",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 245,
+      "saved": 244,
       "same": 68,
-      "lost": 47,
-      "avg_saving_cents": 2.1,
+      "lost": 48,
+      "avg_saving_cents": 2.09,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
