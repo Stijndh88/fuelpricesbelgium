@@ -8,19 +8,19 @@
       "label": "Diesel B7",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Wholesale gasoil price (via the heating oil max price) 1.545 to 1.5448 EUR/L since 17/10: inside the band, no change expected by Thu 22/10.",
+      "reason": "Wholesale gasoil price (via the heating oil max price) 1.545 to 1.5443 EUR/L since 17/10: inside the band, no change expected by Fri 23/10.",
       "expected_change_cents": 0.0,
       "basis": "gasoil",
       "price_today": 2.444,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-10-22",
+      "price_tomorrow": 2.444,
+      "next_possible_change": "2026-10-23",
       "market_note": null,
       "reason_code": "gasoil_inside_band",
       "reason_params": {
         "cost_from": 1.545,
-        "cost_to": 1.5448,
+        "cost_to": 1.5443,
         "since": "2026-10-17",
-        "when": "2026-10-22"
+        "when": "2026-10-23"
       },
       "market_note_params": null,
       "is_guess": true,
@@ -34,19 +34,19 @@
       "label": "Benzine 95 RON E10",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 109 to 110 USD since 21/10: inside the band, no change expected by Thu 22/10.",
+      "reason": "Brent 109 to 111 USD since 21/10: inside the band, no change expected by Fri 23/10.",
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 2.002,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-10-22",
+      "price_tomorrow": 2.002,
+      "next_possible_change": "2026-10-23",
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 108.79,
-        "brent_to": 110.38,
+        "brent_to": 110.54,
         "since": "2026-10-21",
-        "when": "2026-10-22"
+        "when": "2026-10-23"
       },
       "market_note_params": null,
       "is_guess": true,
@@ -60,20 +60,20 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-25",
-      "held_out_to": "2026-10-21",
+      "held_out_from": "2026-04-26",
+      "held_out_to": "2026-10-22",
       "real_changes": 37,
-      "precision": 0.7,
+      "precision": 0.68,
       "recall": 0.57
     },
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-04-25",
-      "held_out_to": "2026-10-21",
-      "real_changes": 26,
+      "held_out_from": "2026-04-26",
+      "held_out_to": "2026-10-22",
+      "real_changes": 25,
       "precision": 0.39,
-      "recall": 0.27
+      "recall": 0.28
     }
   },
   "caveats": [
@@ -117,20 +117,20 @@
       "product": "e10",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 187,
+      "saved": 186,
       "same": 139,
-      "lost": 34,
-      "avg_saving_cents": 1.02,
+      "lost": 35,
+      "avg_saving_cents": 1.01,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "e10",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 188,
+      "saved": 187,
       "same": 139,
-      "lost": 33,
-      "avg_saving_cents": 1.05,
+      "lost": 34,
+      "avg_saving_cents": 1.04,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
