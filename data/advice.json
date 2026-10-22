@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-21",
-  "market_as_of": "2026-10-21",
+  "as_of": "2026-10-22",
+  "market_as_of": "2026-10-22",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -12,7 +12,7 @@
       "expected_change_cents": 0.0,
       "basis": "gasoil",
       "price_today": 2.444,
-      "price_tomorrow": 2.444,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-23",
       "market_note": null,
       "reason_code": "gasoil_inside_band",
@@ -38,13 +38,13 @@
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 2.002,
-      "price_tomorrow": 2.002,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-23",
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 108.79,
-        "brent_to": 110.54,
+        "brent_to": 111.4,
         "since": "2026-10-21",
         "when": "2026-10-23"
       },
