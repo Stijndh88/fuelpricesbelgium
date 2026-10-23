@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-22",
-  "market_as_of": "2026-10-22",
+  "as_of": "2026-10-23",
+  "market_as_of": "2026-10-23",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -12,7 +12,7 @@
       "expected_change_cents": 0.0,
       "basis": "gasoil",
       "price_today": 2.444,
-      "price_tomorrow": 2.444,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-24",
       "market_note": null,
       "reason_code": "gasoil_inside_band",
@@ -32,19 +32,19 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 109 to 112 USD since 21/10: inside the band, no change expected by Sat 24/10.",
-      "expected_change_cents": 0.0,
+      "action": "fill_up_today",
+      "headline": "Fill up today",
+      "reason": "Brent 109 to 114 USD since 21/10: a rise is possible from Sat 24/10 (a guess).",
+      "expected_change_cents": 3.9,
       "basis": "brent",
       "price_today": 2.002,
-      "price_tomorrow": 2.002,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-24",
       "market_note": null,
-      "reason_code": "brent_inside_band",
+      "reason_code": "brent_fill_guess",
       "reason_params": {
         "brent_from": 108.79,
-        "brent_to": 111.5,
+        "brent_to": 114.43,
         "since": "2026-10-21",
         "when": "2026-10-24"
       },
@@ -72,7 +72,7 @@
       "held_out_from": "2026-04-27",
       "held_out_to": "2026-10-23",
       "real_changes": 25,
-      "precision": 0.37,
+      "precision": 0.39,
       "recall": 0.28
     }
   },
