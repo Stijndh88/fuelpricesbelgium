@@ -1,30 +1,36 @@
 {
-  "as_of": "2026-10-23",
+  "as_of": "2026-10-24",
   "market_as_of": "2026-10-23",
   "shock_threshold": 0.05,
   "advice": [
     {
       "product": "diesel_b7",
       "label": "Diesel B7",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Wholesale gasoil price (via the heating oil max price) 1.545 to 1.5412 EUR/L since 17/10: inside the band, no change expected by Tue 27/10.",
-      "expected_change_cents": 0.0,
-      "basis": "gasoil",
+      "action": "fill_by",
+      "headline": "Fill up by Mon 26/10",
+      "reason": "Brent +6.2% since 16/10: a rise is likely from Tue 27/10 or soon after.",
+      "expected_change_cents": 4.7,
+      "basis": "shock",
       "price_today": 2.444,
-      "price_tomorrow": 2.444,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-27",
-      "market_note": null,
-      "reason_code": "gasoil_inside_band",
+      "market_note": "Big market move: Brent +6.2% since 16/10.",
+      "reason_code": "shock_fill",
       "reason_params": {
-        "cost_from": 1.545,
-        "cost_to": 1.5412,
-        "since": "2026-10-17",
+        "name": "Brent",
+        "pct": 6.2,
+        "since": "2026-10-16",
         "when": "2026-10-27"
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Brent",
+        "pct": 6.2,
+        "since": "2026-10-16"
+      },
       "is_guess": true,
-      "headline_params": null,
+      "headline_params": {
+        "day": "2026-10-26"
+      },
       "outlook": null,
       "outlook_code": null,
       "outlook_params": null
@@ -34,21 +40,25 @@
       "label": "Benzine 95 RON E10",
       "action": "fill_by",
       "headline": "Fill up by Mon 26/10",
-      "reason": "Brent 109 to 114 USD since 21/10: a rise is possible from Tue 27/10 (a guess).",
-      "expected_change_cents": 3.9,
-      "basis": "brent",
+      "reason": "Brent +6.5% since 19/10: a rise is likely from Tue 27/10 or soon after.",
+      "expected_change_cents": 5.0,
+      "basis": "shock",
       "price_today": 2.002,
-      "price_tomorrow": 2.002,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-27",
-      "market_note": null,
-      "reason_code": "brent_fill_guess",
+      "market_note": "Big market move: Brent +6.5% since 19/10.",
+      "reason_code": "shock_fill",
       "reason_params": {
-        "brent_from": 108.79,
-        "brent_to": 114.44,
-        "since": "2026-10-21",
+        "name": "Brent",
+        "pct": 6.5,
+        "since": "2026-10-19",
         "when": "2026-10-27"
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Brent",
+        "pct": 6.5,
+        "since": "2026-10-19"
+      },
       "is_guess": true,
       "headline_params": {
         "day": "2026-10-26"
@@ -74,7 +84,7 @@
       "held_out_from": "2026-04-28",
       "held_out_to": "2026-10-24",
       "real_changes": 25,
-      "precision": 0.37,
+      "precision": 0.39,
       "recall": 0.28
     }
   },
