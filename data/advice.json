@@ -8,51 +8,48 @@
       "label": "Diesel B7",
       "action": "fill_up_today",
       "headline": "Fill up today",
-      "reason": "Wholesale gasoil price (via the heating oil max price) 1.545 to 1.586 EUR/L since 17/10: a rise is possible from Wed 28/10 (a guess).",
-      "expected_change_cents": 4.1,
-      "basis": "gasoil",
+      "reason": "Fill up today: the maximum price rises 6.6 cent/L tomorrow (Wed 28/10), 2.444 to 2.510 (published).",
+      "expected_change_cents": 6.6,
+      "basis": "published",
       "price_today": 2.444,
-      "price_tomorrow": null,
+      "price_tomorrow": 2.51,
       "next_possible_change": "2026-10-28",
       "market_note": null,
-      "reason_code": "gasoil_fill_guess",
+      "reason_code": "fill_published",
       "reason_params": {
-        "cost_from": 1.545,
-        "cost_to": 1.586,
-        "since": "2026-10-17",
-        "when": "2026-10-28"
+        "day": "2026-10-28",
+        "cents": 6.6,
+        "today": 2.444,
+        "tomorrow": 2.51
       },
       "market_note_params": null,
-      "is_guess": true,
+      "is_guess": false,
       "headline_params": null,
-      "outlook": "Outlook (uncertain): if wholesale prices hold, a rise of about 4.1 cent/L by Thu 29/10 is likely (about 2 in 3 in the past).",
-      "outlook_code": "outlook_rise_likely",
-      "outlook_params": {
-        "until": "2026-10-29",
-        "cents": 4.1
-      }
+      "outlook": null,
+      "outlook_code": null,
+      "outlook_params": null
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 109 to 111 USD since 21/10: inside the band, no change expected by Wed 28/10.",
-      "expected_change_cents": 0.0,
-      "basis": "brent",
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Wait until tomorrow (Wed 28/10): the maximum price drops 1.4 cent/L, 2.002 to 1.988 (published).",
+      "expected_change_cents": -1.4,
+      "basis": "published",
       "price_today": 2.002,
-      "price_tomorrow": null,
+      "price_tomorrow": 1.988,
       "next_possible_change": "2026-10-28",
       "market_note": null,
-      "reason_code": "brent_inside_band",
+      "reason_code": "wait_published",
       "reason_params": {
-        "brent_from": 108.79,
-        "brent_to": 110.88,
-        "since": "2026-10-21",
-        "when": "2026-10-28"
+        "day": "2026-10-28",
+        "cents": 1.4,
+        "today": 2.002,
+        "tomorrow": 1.988
       },
       "market_note_params": null,
-      "is_guess": true,
+      "is_guess": false,
       "headline_params": null,
       "outlook": null,
       "outlook_code": null,
@@ -63,20 +60,20 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-01",
-      "held_out_to": "2026-10-27",
+      "held_out_from": "2026-05-02",
+      "held_out_to": "2026-10-28",
       "real_changes": 37,
-      "precision": 0.68,
-      "recall": 0.57
+      "precision": 0.67,
+      "recall": 0.54
     },
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-01",
-      "held_out_to": "2026-10-27",
-      "real_changes": 25,
-      "precision": 0.44,
-      "recall": 0.28
+      "held_out_from": "2026-05-02",
+      "held_out_to": "2026-10-28",
+      "real_changes": 26,
+      "precision": 0.47,
+      "recall": 0.31
     }
   },
   "caveats": [

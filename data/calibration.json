@@ -8,20 +8,20 @@
       "recenter": "day"
     },
     "train_from": "2019-04-01",
-    "train_to": "2026-04-30",
-    "test_from": "2026-05-01",
-    "test_to": "2026-10-27",
+    "train_to": "2026-05-01",
+    "test_from": "2026-05-02",
+    "test_to": "2026-10-28",
     "train": {
-      "hits": 175,
+      "hits": 176,
       "misses": 144,
       "false_alarms": 171,
-      "same_day": 96
+      "same_day": 97
     },
     "test": {
-      "hits": 21,
-      "misses": 16,
+      "hits": 20,
+      "misses": 17,
       "false_alarms": 10,
-      "same_day": 12
+      "same_day": 11
     },
     "pass_through": 0.974,
     "trusted": false,
@@ -37,9 +37,9 @@
       "recenter": "average"
     },
     "train_from": "2019-04-02",
-    "train_to": "2026-04-30",
-    "test_from": "2026-05-01",
-    "test_to": "2026-10-27",
+    "train_to": "2026-05-01",
+    "test_from": "2026-05-02",
+    "test_to": "2026-10-28",
     "train": {
       "hits": 111,
       "misses": 138,
@@ -47,12 +47,12 @@
       "same_day": 33
     },
     "test": {
-      "hits": 7,
+      "hits": 8,
       "misses": 18,
       "false_alarms": 9,
-      "same_day": 4
+      "same_day": 5
     },
-    "pass_through": 0.823,
+    "pass_through": 0.816,
     "trusted": false,
     "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
     "cost_source": "New York futures stand-in"
