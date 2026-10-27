@@ -49,7 +49,7 @@
     "test": {
       "hits": 7,
       "misses": 18,
-      "false_alarms": 10,
+      "false_alarms": 9,
       "same_day": 4
     },
     "pass_through": 0.823,
