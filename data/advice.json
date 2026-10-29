@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-28",
-  "market_as_of": "2026-10-28",
+  "as_of": "2026-10-29",
+  "market_as_of": "2026-10-29",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -8,23 +8,23 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Diesel futures -6.2% since 26/10: a drop is likely from Fri 30/10 or soon after.",
-      "expected_change_cents": -8.9,
+      "reason": "Diesel futures -6.3% since 26/10: a drop is likely from Fri 30/10 or soon after.",
+      "expected_change_cents": -9.0,
       "basis": "shock",
       "price_today": 2.51,
-      "price_tomorrow": 2.51,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-30",
-      "market_note": "Big market move: Diesel futures -6.2% since 26/10.",
+      "market_note": "Big market move: Diesel futures -6.3% since 26/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Diesel futures",
-        "pct": -6.2,
+        "pct": -6.3,
         "since": "2026-10-26",
         "when": "2026-10-30"
       },
       "market_note_params": {
         "name": "Diesel futures",
-        "pct": -6.2,
+        "pct": -6.3,
         "since": "2026-10-26"
       },
       "is_guess": true,
@@ -41,17 +41,17 @@
       "label": "Benzine 95 RON E10",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 114 to 111 USD since 28/10: inside the band, no change expected by Fri 30/10.",
+      "reason": "Brent 114 to 110 USD since 28/10: inside the band, no change expected by Fri 30/10.",
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 1.988,
-      "price_tomorrow": 1.988,
+      "price_tomorrow": null,
       "next_possible_change": "2026-10-30",
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 113.88,
-        "brent_to": 111.05,
+        "brent_to": 110.33,
         "since": "2026-10-28",
         "when": "2026-10-30"
       },
