@@ -8,52 +8,49 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Diesel futures -6.3% since 26/10: a drop is likely from Fri 30/10 or soon after.",
-      "expected_change_cents": -9.0,
-      "basis": "shock",
+      "reason": "Wait until tomorrow (Fri 30/10): the maximum price drops 2.4 cent/L, 2.510 to 2.486 (published).",
+      "expected_change_cents": -2.4,
+      "basis": "published",
       "price_today": 2.51,
-      "price_tomorrow": null,
+      "price_tomorrow": 2.486,
       "next_possible_change": "2026-10-30",
-      "market_note": "Big market move: Diesel futures -6.3% since 26/10.",
-      "reason_code": "shock_wait",
+      "market_note": "Big market move: Diesel futures -6.4% since 26/10.",
+      "reason_code": "wait_published",
       "reason_params": {
-        "name": "Diesel futures",
-        "pct": -6.3,
-        "since": "2026-10-26",
-        "when": "2026-10-30"
+        "day": "2026-10-30",
+        "cents": 2.4,
+        "today": 2.51,
+        "tomorrow": 2.486
       },
       "market_note_params": {
         "name": "Diesel futures",
-        "pct": -6.3,
+        "pct": -6.4,
         "since": "2026-10-26"
       },
-      "is_guess": true,
+      "is_guess": false,
       "headline_params": null,
-      "outlook": "Outlook (uncertain): if wholesale prices hold, a drop of about 4.8 cent/L by Sat 31/10 is a fair chance (about 4 in 10 in the past).",
-      "outlook_code": "outlook_fall_fair",
-      "outlook_params": {
-        "until": "2026-10-31",
-        "cents": 4.8
-      }
+      "outlook": null,
+      "outlook_code": null,
+      "outlook_params": null
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 114 to 110 USD since 28/10: inside the band, no change expected by Fri 30/10.",
+      "reason": "Brent 114 to 111 USD since 28/10: inside the band, no change expected by Sat 31/10.",
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 1.988,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-10-30",
+      "price_tomorrow": 1.988,
+      "next_possible_change": "2026-10-31",
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 113.88,
-        "brent_to": 110.33,
+        "brent_to": 110.84,
         "since": "2026-10-28",
-        "when": "2026-10-30"
+        "when": "2026-10-31"
       },
       "market_note_params": null,
       "is_guess": true,
@@ -67,17 +64,17 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-03",
-      "held_out_to": "2026-10-29",
-      "real_changes": 37,
-      "precision": 0.67,
-      "recall": 0.54
+      "held_out_from": "2026-05-04",
+      "held_out_to": "2026-10-30",
+      "real_changes": 38,
+      "precision": 0.65,
+      "recall": 0.53
     },
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-03",
-      "held_out_to": "2026-10-29",
+      "held_out_from": "2026-05-04",
+      "held_out_to": "2026-10-30",
       "real_changes": 26,
       "precision": 0.47,
       "recall": 0.31
