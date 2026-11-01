@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-31",
+  "as_of": "2026-11-01",
   "market_as_of": "2026-10-30",
   "shock_threshold": 0.05,
   "advice": [
@@ -8,7 +8,7 @@
       "label": "Diesel B7",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 118 to 118 USD since 31/10: inside the band, no change expected by Tue 03/11.",
+      "reason": "Brent 113 to 113 USD since 31/10: inside the band, no change expected by Tue 03/11.",
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 2.452,
@@ -17,8 +17,8 @@
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
-        "brent_from": 117.64,
-        "brent_to": 117.64,
+        "brent_from": 113.43,
+        "brent_to": 113.43,
         "since": "2026-10-31",
         "when": "2026-11-03"
       },
@@ -32,27 +32,25 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "fill_by",
-      "headline": "Fill up by Mon 02/11",
-      "reason": "Brent 114 to 118 USD since 28/10: a rise is possible from Tue 03/11 (a guess).",
-      "expected_change_cents": 2.6,
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "Brent 114 to 113 USD since 28/10: inside the band, no change expected by Tue 03/11.",
+      "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 1.988,
       "price_tomorrow": null,
       "next_possible_change": "2026-11-03",
       "market_note": null,
-      "reason_code": "brent_fill_guess",
+      "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 113.88,
-        "brent_to": 117.64,
+        "brent_to": 113.43,
         "since": "2026-10-28",
         "when": "2026-11-03"
       },
       "market_note_params": null,
       "is_guess": true,
-      "headline_params": {
-        "day": "2026-11-02"
-      },
+      "headline_params": null,
       "outlook": null,
       "outlook_code": null,
       "outlook_params": null
@@ -62,8 +60,8 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-05",
-      "held_out_to": "2026-10-31",
+      "held_out_from": "2026-05-06",
+      "held_out_to": "2026-11-01",
       "real_changes": 39,
       "precision": 0.65,
       "recall": 0.51
@@ -71,11 +69,11 @@
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-05",
-      "held_out_to": "2026-10-31",
-      "real_changes": 26,
-      "precision": 0.47,
-      "recall": 0.31
+      "held_out_from": "2026-05-06",
+      "held_out_to": "2026-11-01",
+      "real_changes": 25,
+      "precision": 0.44,
+      "recall": 0.28
     }
   },
   "caveats": [
@@ -112,7 +110,7 @@
       "saved": 239,
       "same": 73,
       "lost": 48,
-      "avg_saving_cents": 2.05,
+      "avg_saving_cents": 2.06,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
@@ -132,7 +130,7 @@
       "saved": 187,
       "same": 136,
       "lost": 37,
-      "avg_saving_cents": 1.01,
+      "avg_saving_cents": 1.0,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
