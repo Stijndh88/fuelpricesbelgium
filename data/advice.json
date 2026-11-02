@@ -1,24 +1,24 @@
 {
-  "as_of": "2026-11-01",
-  "market_as_of": "2026-10-30",
+  "as_of": "2026-11-02",
+  "market_as_of": "2026-11-02",
   "shock_threshold": 0.05,
   "advice": [
     {
       "product": "diesel_b7",
       "label": "Diesel B7",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 113 to 113 USD since 31/10: inside the band, no change expected by Tue 03/11.",
-      "expected_change_cents": 0.0,
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Brent 118 to 110 USD since 31/10: a drop is possible from Tue 03/11 (a guess).",
+      "expected_change_cents": -5.1,
       "basis": "brent",
       "price_today": 2.452,
       "price_tomorrow": null,
       "next_possible_change": "2026-11-03",
       "market_note": null,
-      "reason_code": "brent_inside_band",
+      "reason_code": "brent_wait_guess",
       "reason_params": {
-        "brent_from": 113.43,
-        "brent_to": 113.43,
+        "brent_from": 117.64,
+        "brent_to": 110.22,
         "since": "2026-10-31",
         "when": "2026-11-03"
       },
@@ -32,19 +32,19 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 114 to 113 USD since 28/10: inside the band, no change expected by Tue 03/11.",
-      "expected_change_cents": 0.0,
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Brent 114 to 110 USD since 28/10: a drop is possible from Tue 03/11 (a guess).",
+      "expected_change_cents": -2.5,
       "basis": "brent",
       "price_today": 1.988,
       "price_tomorrow": null,
       "next_possible_change": "2026-11-03",
       "market_note": null,
-      "reason_code": "brent_inside_band",
+      "reason_code": "brent_wait_guess",
       "reason_params": {
         "brent_from": 113.88,
-        "brent_to": 113.43,
+        "brent_to": 110.22,
         "since": "2026-10-28",
         "when": "2026-11-03"
       },
@@ -60,8 +60,8 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-06",
-      "held_out_to": "2026-11-01",
+      "held_out_from": "2026-05-07",
+      "held_out_to": "2026-11-02",
       "real_changes": 39,
       "precision": 0.65,
       "recall": 0.51
@@ -69,8 +69,8 @@
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-06",
-      "held_out_to": "2026-11-01",
+      "held_out_from": "2026-05-07",
+      "held_out_to": "2026-11-02",
       "real_changes": 25,
       "precision": 0.44,
       "recall": 0.28
@@ -97,18 +97,18 @@
       "product": "diesel_b7",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 224,
-      "same": 74,
+      "saved": 225,
+      "same": 73,
       "lost": 62,
-      "avg_saving_cents": 1.7,
+      "avg_saving_cents": 1.71,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
       "product": "diesel_b7",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 239,
-      "same": 73,
+      "saved": 240,
+      "same": 72,
       "lost": 48,
       "avg_saving_cents": 2.06,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
@@ -117,8 +117,8 @@
       "product": "e10",
       "shock_threshold": null,
       "windows": 360,
-      "saved": 186,
-      "same": 136,
+      "saved": 187,
+      "same": 135,
       "lost": 38,
       "avg_saving_cents": 0.98,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
@@ -127,10 +127,10 @@
       "product": "e10",
       "shock_threshold": 0.05,
       "windows": 360,
-      "saved": 187,
-      "same": 136,
+      "saved": 188,
+      "same": 135,
       "lost": 37,
-      "avg_saving_cents": 1.0,
+      "avg_saving_cents": 1.01,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
