@@ -9,7 +9,7 @@
       "action": "wait",
       "headline": "Wait",
       "reason": "Brent 118 to 110 USD since 31/10: a drop is possible from Tue 03/11 (a guess).",
-      "expected_change_cents": -5.1,
+      "expected_change_cents": -5.0,
       "basis": "brent",
       "price_today": 2.452,
       "price_tomorrow": null,
@@ -18,7 +18,7 @@
       "reason_code": "brent_wait_guess",
       "reason_params": {
         "brent_from": 117.64,
-        "brent_to": 110.22,
+        "brent_to": 110.37,
         "since": "2026-10-31",
         "when": "2026-11-03"
       },
@@ -35,7 +35,7 @@
       "action": "wait",
       "headline": "Wait",
       "reason": "Brent 114 to 110 USD since 28/10: a drop is possible from Tue 03/11 (a guess).",
-      "expected_change_cents": -2.5,
+      "expected_change_cents": -2.4,
       "basis": "brent",
       "price_today": 1.988,
       "price_tomorrow": null,
@@ -44,7 +44,7 @@
       "reason_code": "brent_wait_guess",
       "reason_params": {
         "brent_from": 113.88,
-        "brent_to": 110.22,
+        "brent_to": 110.37,
         "since": "2026-10-28",
         "when": "2026-11-03"
       },
