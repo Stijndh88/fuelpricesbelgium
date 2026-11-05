@@ -52,7 +52,7 @@
       "false_alarms": 9,
       "same_day": 4
     },
-    "pass_through": 0.823,
+    "pass_through": 0.815,
     "trusted": false,
     "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
     "cost_source": "New York futures stand-in"

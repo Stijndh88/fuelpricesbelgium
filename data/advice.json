@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-04",
-  "market_as_of": "2026-11-04",
+  "as_of": "2026-11-05",
+  "market_as_of": "2026-11-05",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -8,23 +8,23 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Brent -11.8% since 30/10: a drop is likely from Fri 06/11 or soon after.",
-      "expected_change_cents": -9.6,
+      "reason": "Brent -19.9% since 30/10: a drop is likely from Fri 06/11 or soon after.",
+      "expected_change_cents": -16.2,
       "basis": "shock",
       "price_today": 2.452,
-      "price_tomorrow": 2.452,
+      "price_tomorrow": null,
       "next_possible_change": "2026-11-06",
-      "market_note": "Big market move: Brent -11.8% since 30/10.",
+      "market_note": "Big market move: Brent -19.9% since 30/10.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Brent",
-        "pct": -11.8,
+        "pct": -19.9,
         "since": "2026-10-30",
         "when": "2026-11-06"
       },
       "market_note_params": {
         "name": "Brent",
-        "pct": -11.8,
+        "pct": -19.9,
         "since": "2026-10-30"
       },
       "is_guess": true,
@@ -39,23 +39,27 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "no_difference",
-      "headline": "No difference",
-      "reason": "Brent 104 to 104 USD since 04/11: inside the band, no change expected by Fri 06/11.",
-      "expected_change_cents": 0.0,
-      "basis": "brent",
+      "action": "wait",
+      "headline": "Wait",
+      "reason": "Brent -10.1% since 02/11: a drop is likely from Fri 06/11 or soon after.",
+      "expected_change_cents": -7.3,
+      "basis": "shock",
       "price_today": 1.905,
-      "price_tomorrow": 1.905,
+      "price_tomorrow": null,
       "next_possible_change": "2026-11-06",
-      "market_note": null,
-      "reason_code": "brent_inside_band",
+      "market_note": "Big market move: Brent -10.1% since 02/11.",
+      "reason_code": "shock_wait",
       "reason_params": {
-        "brent_from": 103.6,
-        "brent_to": 103.8,
-        "since": "2026-11-04",
+        "name": "Brent",
+        "pct": -10.1,
+        "since": "2026-11-02",
         "when": "2026-11-06"
       },
-      "market_note_params": null,
+      "market_note_params": {
+        "name": "Brent",
+        "pct": -10.1,
+        "since": "2026-11-02"
+      },
       "is_guess": true,
       "headline_params": null,
       "outlook": null,
