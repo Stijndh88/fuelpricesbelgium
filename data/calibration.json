@@ -8,9 +8,9 @@
       "recenter": "day"
     },
     "train_from": "2019-04-01",
-    "train_to": "2026-05-12",
-    "test_from": "2026-05-13",
-    "test_to": "2026-11-08",
+    "train_to": "2026-05-13",
+    "test_from": "2026-05-14",
+    "test_to": "2026-11-09",
     "train": {
       "hits": 177,
       "misses": 145,
@@ -37,18 +37,18 @@
       "recenter": "average"
     },
     "train_from": "2019-04-02",
-    "train_to": "2026-05-12",
-    "test_from": "2026-05-13",
-    "test_to": "2026-11-08",
+    "train_to": "2026-05-13",
+    "test_from": "2026-05-14",
+    "test_to": "2026-11-09",
     "train": {
       "hits": 112,
-      "misses": 139,
+      "misses": 140,
       "false_alarms": 151,
       "same_day": 34
     },
     "test": {
       "hits": 8,
-      "misses": 17,
+      "misses": 16,
       "false_alarms": 9,
       "same_day": 4
     },
