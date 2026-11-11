@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-10",
-  "market_as_of": "2026-11-10",
+  "as_of": "2026-11-11",
+  "market_as_of": "2026-11-11",
   "shock_threshold": 0.05,
   "advice": [
     {
@@ -8,24 +8,24 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Brent -7.4% since 05/11: a drop is likely from Thu 12/11 or soon after.",
-      "expected_change_cents": -5.0,
+      "reason": "Brent -6.2% since 06/11: a drop is likely from Thu 12/11 or soon after.",
+      "expected_change_cents": -4.2,
       "basis": "shock",
       "price_today": 2.369,
-      "price_tomorrow": 2.369,
+      "price_tomorrow": null,
       "next_possible_change": "2026-11-12",
-      "market_note": "Big market move: Brent -7.4% since 05/11.",
+      "market_note": "Big market move: Brent -6.2% since 06/11.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Brent",
-        "pct": -7.4,
-        "since": "2026-11-05",
+        "pct": -6.2,
+        "since": "2026-11-06",
         "when": "2026-11-12"
       },
       "market_note_params": {
         "name": "Brent",
-        "pct": -7.4,
-        "since": "2026-11-05"
+        "pct": -6.2,
+        "since": "2026-11-06"
       },
       "is_guess": true,
       "headline_params": null,
@@ -39,28 +39,24 @@
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
-      "action": "wait",
-      "headline": "Wait",
-      "reason": "Wait until tomorrow (Wed 11/11): the maximum price drops 6.3 cent/L, 1.905 to 1.842 (published).",
-      "expected_change_cents": -6.3,
-      "basis": "published",
-      "price_today": 1.905,
-      "price_tomorrow": 1.842,
-      "next_possible_change": "2026-11-11",
-      "market_note": "Big market move: Brent -7.4% since 05/11.",
-      "reason_code": "wait_published",
+      "action": "no_difference",
+      "headline": "No difference",
+      "reason": "Brent 91 to 92 USD since 11/11: inside the band, no change expected by Thu 12/11.",
+      "expected_change_cents": 0.0,
+      "basis": "brent",
+      "price_today": 1.842,
+      "price_tomorrow": null,
+      "next_possible_change": "2026-11-12",
+      "market_note": null,
+      "reason_code": "brent_inside_band",
       "reason_params": {
-        "day": "2026-11-11",
-        "cents": 6.3,
-        "today": 1.905,
-        "tomorrow": 1.842
+        "brent_from": 91.49,
+        "brent_to": 92.26,
+        "since": "2026-11-11",
+        "when": "2026-11-12"
       },
-      "market_note_params": {
-        "name": "Brent",
-        "pct": -7.4,
-        "since": "2026-11-05"
-      },
-      "is_guess": false,
+      "market_note_params": null,
+      "is_guess": true,
       "headline_params": null,
       "outlook": null,
       "outlook_code": null,
