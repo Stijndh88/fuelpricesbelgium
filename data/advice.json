@@ -8,23 +8,23 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Brent -6.2% since 06/11: a drop is likely from Thu 12/11 or soon after.",
-      "expected_change_cents": -4.2,
+      "reason": "Brent -6.3% since 06/11: a drop is likely from Thu 12/11 or soon after.",
+      "expected_change_cents": -4.3,
       "basis": "shock",
       "price_today": 2.369,
       "price_tomorrow": null,
       "next_possible_change": "2026-11-12",
-      "market_note": "Big market move: Brent -6.2% since 06/11.",
+      "market_note": "Big market move: Brent -6.3% since 06/11.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Brent",
-        "pct": -6.2,
+        "pct": -6.3,
         "since": "2026-11-06",
         "when": "2026-11-12"
       },
       "market_note_params": {
         "name": "Brent",
-        "pct": -6.2,
+        "pct": -6.3,
         "since": "2026-11-06"
       },
       "is_guess": true,
@@ -51,7 +51,7 @@
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 91.49,
-        "brent_to": 92.26,
+        "brent_to": 92.13,
         "since": "2026-11-11",
         "when": "2026-11-12"
       },
