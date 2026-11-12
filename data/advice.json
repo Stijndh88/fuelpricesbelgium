@@ -8,49 +8,52 @@
       "label": "Diesel B7",
       "action": "wait",
       "headline": "Wait",
-      "reason": "Brent -5.7% since 06/11: a drop is likely from Fri 13/11 or soon after.",
-      "expected_change_cents": -3.8,
+      "reason": "Brent -5.1% since 06/11: a drop is likely from Sat 14/11 or soon after.",
+      "expected_change_cents": -3.4,
       "basis": "shock",
       "price_today": 2.369,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-11-13",
-      "market_note": "Big market move: Brent -5.7% since 06/11.",
+      "price_tomorrow": 2.369,
+      "next_possible_change": "2026-11-14",
+      "market_note": "Big market move: Brent -5.1% since 06/11.",
       "reason_code": "shock_wait",
       "reason_params": {
         "name": "Brent",
-        "pct": -5.7,
+        "pct": -5.1,
         "since": "2026-11-06",
-        "when": "2026-11-13"
+        "when": "2026-11-14"
       },
       "market_note_params": {
         "name": "Brent",
-        "pct": -5.7,
+        "pct": -5.1,
         "since": "2026-11-06"
       },
       "is_guess": true,
       "headline_params": null,
-      "outlook": null,
-      "outlook_code": null,
-      "outlook_params": null
+      "outlook": "Outlook (uncertain): if wholesale prices hold, a drop of about 3.4 cent/L by Sat 14/11 is a fair chance (about 4 in 10 in the past).",
+      "outlook_code": "outlook_fall_fair",
+      "outlook_params": {
+        "until": "2026-11-14",
+        "cents": 3.4
+      }
     },
     {
       "product": "e10",
       "label": "Benzine 95 RON E10",
       "action": "no_difference",
       "headline": "No difference",
-      "reason": "Brent 91 to 93 USD since 11/11: inside the band, no change expected by Fri 13/11.",
+      "reason": "Brent 91 to 93 USD since 11/11: inside the band, no change expected by Sat 14/11.",
       "expected_change_cents": 0.0,
       "basis": "brent",
       "price_today": 1.842,
-      "price_tomorrow": null,
-      "next_possible_change": "2026-11-13",
+      "price_tomorrow": 1.842,
+      "next_possible_change": "2026-11-14",
       "market_note": null,
       "reason_code": "brent_inside_band",
       "reason_params": {
         "brent_from": 91.49,
-        "brent_to": 92.76,
+        "brent_to": 93.35,
         "since": "2026-11-11",
-        "when": "2026-11-13"
+        "when": "2026-11-14"
       },
       "market_note_params": null,
       "is_guess": true,
@@ -64,8 +67,8 @@
     "diesel_b7": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-17",
-      "held_out_to": "2026-11-12",
+      "held_out_from": "2026-05-18",
+      "held_out_to": "2026-11-13",
       "real_changes": 36,
       "precision": 0.57,
       "recall": 0.47
@@ -73,8 +76,8 @@
     "e10": {
       "trusted": false,
       "note": "Held-out score is too low to trust: predictions stay labelled as a guess.",
-      "held_out_from": "2026-05-17",
-      "held_out_to": "2026-11-12",
+      "held_out_from": "2026-05-18",
+      "held_out_to": "2026-11-13",
       "real_changes": 25,
       "precision": 0.47,
       "recall": 0.36
@@ -124,7 +127,7 @@
       "saved": 185,
       "same": 133,
       "lost": 42,
-      "avg_saving_cents": 0.96,
+      "avg_saving_cents": 0.97,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     },
     {
@@ -134,7 +137,7 @@
       "saved": 186,
       "same": 133,
       "lost": 41,
-      "avg_saving_cents": 0.99,
+      "avg_saving_cents": 1.0,
       "note": "Need to refuel within 7 days; following the advice versus a random day."
     }
   ]
